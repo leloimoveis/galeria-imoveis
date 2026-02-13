@@ -1,0 +1,1 @@
+(function(){ /* fallback desativado - ícones locais SVG em uso */ })();

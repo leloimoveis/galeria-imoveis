@@ -1,0 +1,3988 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+  <script type="application/x-unificador">
+(function(){try{
+  var s=null;try{s=localStorage.getItem('theme');}catch(_){}
+  var p=false;try{p=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches;}catch(_){}
+  var t=s|| (p?'light':'dark');
+  document.documentElement.setAttribute('data-theme', t);
+}catch(_){}})();
+</script>
+<title>Lélo Imóveis — Listagem com Filtros (Light/Dark)</title>
+<style>
+  :root{
+    /* Tema escuro refinado – base Lélo Imóveis */
+    --bg:#0e1621;
+    --panel:#151b26;
+    --panel-2:#1b2433;
+    --accent:#ef3f3f;
+    --accent-2:#2563eb;
+    --muted:#9ca3af;
+    --text:#f3f4f6;
+    --chip:#1f2933;
+    --border:#202938;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;}
+  .app{display:grid; grid-template-columns:300px 1fr; min-height:100vh;}
+  /* z-index acima das barras sticky do conteúdo para não "tapar" cliques no menu lateral */
+  .sidebar{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border-right:1px solid var(--border); padding:18px 14px 16px; position:sticky; top:0; height:100vh; overflow:auto; z-index:6;}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--accent)}
+  .brand h1{font-size:16px; margin:0}
+  
+.last-update{
+  margin-left:auto;
+  font-size:12px;
+  opacity:.78;
+  white-space:nowrap;
+}
+.last-update .ts{ font-weight:800; opacity:1; }
+@media (max-width: 520px){
+  .brand{ flex-wrap:wrap; }
+  .last-update{ flex-basis:100%; margin-left:0; padding-left:22px; white-space:normal; }
+}
+.group{margin:14px 0}
+  .group h3{font-size:12px; letter-spacing:.08em; color:var(--muted); margin:0 0 8px}
+  .row{display:flex; gap:8px}
+  .input, select, .button, .chip{background:#0c0f14; border:1px solid var(--border); color:var(--text); border-radius:10px; padding:10px 12px; width:100%;}
+  .chip{display:inline-flex; gap:6px; align-items:center; padding:6px 10px; font-size:12px; background:var(--chip)}
+
+.chip-icon{
+  width:14px;
+  height:14px;
+  flex:0 0 14px;
+  display:inline-block;
+}
+.chip-icon + span{
+  display:inline-block;
+  min-width:1.7em;
+  text-align:center;
+}
+
+  .button{cursor:pointer; user-select:none; text-align:center; font-weight:600; background:linear-gradient(180deg,#1d2939,#111827); transition:transform .06s ease, box-shadow .2s;}
+  .button:hover{box-shadow:0 0 0 1px #1f2937, 0 8px 20px rgba(0,0,0,.3)}
+  .button:active{transform:translateY(1px)}
+  .button.accent{background:linear-gradient(180deg,#f97373,#ef3f3f); color:#2b0b0b; border-color:#b91c1c}
+  .button.ghost{background:#0c0f14}
+  .badges{display:flex; flex-wrap:nowrap; gap:8px; margin-top:6px}
+  .badges .chip{flex:1 1 0; text-align:center;}
+  .muted{color:var(--muted)}
+  .divider{height:1px; background:var(--border); margin:12px 0}
+  .content{display:flex; flex-direction:column; min-width:0;}
+  .toolbar{display:flex; gap:10px; align-items:center; padding:14px 16px; position:sticky; top:0; z-index:5; background:linear-gradient(180deg,#0f1216,#0f1216cc 70%,transparent); border-bottom:1px solid var(--border); backdrop-filter:saturate(120%) blur(4px);}
+  .toolbar .title{font-weight:700}
+  .spacer{flex:1}
+  .select{min-width:120px}
+  .search{min-width:260px}
+  .toggle{display:inline-flex; gap:6px; background:#0c0f14; border:1px solid var(--border); border-radius:10px; padding:4px;}
+  .toggle button{border:0; padding:8px 12px; border-radius:8px; cursor:pointer; color:var(--text); background:transparent; font-weight:600;}
+  .toggle button.active{background:var(--accent); color:#ffffff}
+  .table-wrap{padding:0 12px 24px; height:calc(100vh - 60px); overflow:auto;}
+  table{width:100%; border-collapse:separate; border-spacing:0 12px;}
+  thead th{position:sticky; top: 0; z-index:3; background:var(--bg); padding:8px 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);}
+  tbody tr{background:var(--panel); border:1px solid var(--border);}
+  tbody td{padding:12px 10px; vertical-align:middle;}
+  tbody tr td:first-child{border-radius:12px 0 0 12px}
+  tbody tr td:last-child{border-radius:0 12px 12px 0}
+  .thumb{width:128px; height:96px; border-radius:10px; object-fit:cover; background:#0c0f14; border:1px solid var(--border);}
+  .title-col{min-width:280px}
+  .title-col h4{margin:0; font-size:14px; line-height:1.2}
+  .title-col .sub{color:var(--muted); font-size:12px}
+  .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#0c0f14; font-weight:600; white-space:nowrap;}
+  .price{font-weight:800}
+  .actions{ text-align:right; vertical-align:middle; }
+  .actions .icon-btn{width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:#0c0f14; cursor:pointer}
+  .link{color:var(--accent-2); text-decoration:none}
+  .link:hover{text-decoration:underline}
+  .pagination{display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-top:10px;}
+  .pagination button{padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#0c0f14; color:#var(--text); cursor:pointer}
+  .pagination .active{background:var(--accent); color:#052012; font-weight:800}
+  .help{font-size:12px; color:var(--muted)}
+  .badge{display:inline-block; background:var(--chip); padding:4px 8px; border-radius:8px; font-size:11px; color:#d1d5db}
+  .nowrap{white-space:nowrap}
+  @media (max-width: 1100px){
+    .app{grid-template-columns: 0 1fr}
+    .sidebar{display:none}
+    .title-col{min-width:220px}
+    .toolbar{flex-wrap:wrap; gap:8px}
+    .search{min-width:180px}
+  }
+
+  /* Lightbox */
+  .lightbox{position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:9999;}
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:90vw; max-height:85vh; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,.6); border:1px solid var(--border); background:#0c0f14;}
+
+
+/* === MOV (Entrou/Saiu) badges & accents === */
+.token-mov{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.02em;vertical-align:middle}
+.token-mov.entrou{background:rgba(34,197,94,.15);border:1px solid #177a3f;color:#22c55e}
+.token-mov.saiu{background:rgba(239,68,68,.15);border:1px solid #7a1717;color:#ef4444}
+.row-accent.entrou{box-shadow:inset 3px 0 0 #16a34a}
+.row-accent.saiu{box-shadow:inset 3px 0 0 #ef4444}
+.toggle-mov{display:flex;gap:6px;background:#0c0f14;border:1px solid var(--border);border-radius:10px;padding:4px}
+.toggle-mov button{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;color:var(--text);background:transparent;font-weight:600;flex:1}
+.toggle-mov button.active[data-mov="entrou"]{background:#16a34a;color:#052012}html[data-theme="light"] #negociacaoToggle button.active[data-neg="venda"]{background:#16a34a;color:#052012}
+
+.toggle-mov button.active[data-mov="saiu"]{background:#ef4444;color:#330909}
+.toggle-mov button.active[data-mov="total"]{background:#16a34a;color:#052012}
+
+
+/* === V3.11 FINAL: Sidebar retrátil + auto-refresh === */
+body.sidebar-collapsed .app{ grid-template-columns:0 1fr !important; }
+body.sidebar-collapsed .sidebar{ width:0 !important; min-width:0 !important; padding:0 !important; border-right:none !important; overflow:hidden !important; }
+.sidebar-toggle{
+  position:fixed; left:14px; top:70px; z-index:50;
+  padding:8px 12px; border-radius:10px; border:1px solid var(--border);
+  background:#0c0f14; color:#E5E7EB; font-weight:700; letter-spacing:.03em; cursor:pointer;
+}
+.sidebar-toggle:hover{ background:#10151d }
+.sidebar-toggle .icon{margin-right:6px; opacity:.8}
+#aplicar{ display:none !important; }
+
+
+/* === V3.11.1: Toggle 'Filtros' com melhor UX (posicionamento "smart") === */
+.sidebar-toggle{
+  position:fixed; top:72px; left:12px; z-index:60;
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 12px; border-radius:999px;
+  background:rgba(15,18,22,.92); color:#E5E7EB;
+  border:1px solid #23262B; box-shadow:0 8px 24px rgba(0,0,0,.35);
+  font-weight:700; letter-spacing:.02em; cursor:pointer;
+}
+.sidebar-toggle:hover{ background:rgba(17,24,39,.98) }
+.sidebar-toggle .icon{opacity:.9}
+/* quando colapsado, mostramos uma "pílula" menor */
+body.sidebar-collapsed .sidebar-toggle{ padding:8px 10px; }
+
+
+  /* v15 layout/estilo */
+  #dateRow{ display:flex; flex-wrap:nowrap; gap:8px; }
+  #dateRow .input[type="date"]{ width:100%; }
+  /* Filtros rápidos em uma única linha */
+  #quickFiltersRow{
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    align-items:center;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+  #quickFiltersRow .chip-date{ flex:0 0 auto; }
+  #quickFiltersRow::-webkit-scrollbar{ height:6px; }
+  #quickFiltersRow::-webkit-scrollbar-thumb{ background:var(--border); border-radius:999px; }
+
+.chip-date{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; border:1px solid var(--border); border-radius:999px;
+  background:#0c0f14; color:var(--text); font-size:12px; font-weight:600; cursor:pointer;
+  white-space:nowrap;
+}
+.chip-date.ghost{ background:transparent; }
+.chip-date:hover{ border-color:var(--accent); }
+
+.chip-date.active{
+  background: var(--accent);
+  border-color: var(--accent);
+  color:#fff;
+}
+
+.lightbox{ position:fixed; inset:0; display:none; z-index:9999; }
+.lightbox.show{ display:flex; align-items:center; justify-content:center; }
+.lightbox-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:saturate(120%) blur(1px); }
+.lightbox-content{ position:relative; z-index:1; max-width:90vw; max-height:90vh; background:#0c0f14; border:1px solid var(--border); border-radius:12px; padding:10px; box-shadow:0 10px 40px rgba(0,0,0,.6); }
+.lightbox-content img{ display:block; max-width:86vw; max-height:80vh; border-radius:8px; }
+.lightbox-close{ position:absolute; top:6px; right:6px; border:0; background:#121820; color:#fff; border:1px solid var(--border); border-radius:8px; padding:6px 10px; cursor:pointer; font-size:16px; line-height:1; }
+
+
+/* v16: 'Áreas (m²)' em uma única linha (3 colunas) */
+#areasRow{
+  display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:8px;
+}
+@media (max-width: 560px){
+  #areasRow{ grid-template-columns: 1fr; } /* empilha no mobile pequeno para não estourar */
+}
+
+
+/* === Tooltip for token-mov (ENTROU/SAIU) === */
+.token-mov[aria-label]{ position:relative; cursor:default; }
+.token-mov[aria-label]::after{
+  content: attr(aria-label);
+  position:absolute;
+  left:50%; bottom: 125%;
+  transform: translateX(-50%) translateY(4px);
+  opacity:0;
+  background: rgba(0,0,0,0.9);
+  color:#fff;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:12px;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index: 1000;
+  transition: opacity .12s ease, transform .12s ease;
+}
+.token-mov[aria-label]::before{
+  content:"";
+  position:absolute;
+  left:50%; bottom: 118%;
+  transform: translateX(-50%);
+  border:6px solid transparent;
+  border-top-color: rgba(0,0,0,0.9);
+  opacity:0;
+  transition: opacity .12s ease;
+}
+.token-mov[aria-label]:hover::after,
+.token-mov[aria-label]:hover::before{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* === Tooltip para badges 'Entrou'/'Saiu' === */
+.badge[data-tip]{
+  position: relative;
+}
+.badge[data-tip]:hover::after,
+.badge[data-tip]:focus::after{
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 125%; /* show above */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.2;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+.badge[data-tip]:hover::before,
+.badge[data-tip]:focus::before{
+  content: "";
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(0,0,0,0.85);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+
+/* === Overrides: Centralização vertical e respiro do bloco de botões === */
+td.actions{
+  /* garantir que a célula use a altura total da linha e centralize o grid */
+  vertical-align: middle !important;
+  height: 100%;
+  /* mesmo respiro em cima e embaixo */
+  padding-block: 10px; /* ajuste fino aqui se quiser 12px, etc. */
+  /* se já for grid, centraliza; se não, não afeta */
+  align-content: center;
+  justify-content: center;
+  place-content: center;
+}
+
+/* === Sidebar compact (ajustes finais) — v12 === */
+.sidebar{ padding:6px 8px; }
+.brand{ margin-bottom:4px; }
+.brand h1{ font-size:12.5px; }
+.last-update{ font-size:9.5px; opacity:.72; line-height:1.2; margin-top:2px; }
+
+/* Remover separadores/linhas entre grupos (se existirem) */
+.sidebar hr{ display:none !important; }
+.sidebar .divider{ display:none !important; height:0 !important; margin:0 !important; background:transparent !important; }
+
+.group{ margin:6px 0; padding:6px 0 8px; border:0 !important; box-shadow:none !important; }
+.group h3{ margin:0 0 4px; font-size:11px; }
+
+.sidebar .row{ gap:4px !important; }
+.sidebar .col{ gap:4px !important; }
+
+#dateRow{ gap:4px !important; }
+#quickFiltersRow{ gap:6px !important; padding-bottom:1px; }
+#areasRow{ gap:6px !important; }
+
+/* Caixas um pouco mais altas (inputs / selects / botões) */
+.sidebar .input,
+.sidebar select,
+.sidebar .button,
+.sidebar .chip{
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:12px;
+  min-height:34px;
+}
+
+.sidebar .chip-date{ padding:6px 10px; font-size:11.5px; min-height:32px; }
+
+/* Toggles (Movimento / Negociação) — mais altos, 100% largura */
+.sidebar .toggle,
+.sidebar .toggle-mov{ padding:3px; border-radius:10px; width:100%; display:flex; }
+.sidebar .toggle button,
+.sidebar .toggle-mov button{
+  padding:7px 10px;
+  border-radius:8px;
+  font-size:12px;
+  min-height:32px;
+  line-height:1;
+  flex:1 1 0;
+  text-align:center;
+}
+
+.sidebar .btn{ padding:8px 10px; border-radius:10px; min-height:34px; }
+
+/* Combo (Bairro): lista filtrável ao digitar */
+.combo{ position:relative; display:block; }
+.combo .input{ padding-right:32px; }
+.combo-btn{
+  position:absolute; right:7px; top:50%; transform:translateY(-50%);
+  border:1px solid transparent; background:transparent; color:var(--muted);
+  padding:3px 6px; border-radius:8px; cursor:pointer; line-height:1;
+}
+.combo-btn:hover{ background:var(--chip); }
+.combo-menu{
+  position:absolute; left:0; right:0; top:calc(100% + 5px);
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:12px;
+  max-height:240px;
+  overflow:auto;
+  box-shadow:0 14px 35px rgba(0,0,0,.35);
+  display:none;
+  z-index:999;
+  padding:5px;
+}
+.combo-menu.open{ display:block; }
+.combo-option{
+  padding:6px 9px;
+  border-radius:9px;
+  cursor:pointer;
+  user-select:none;
+  color:var(--text);
+  font-size:12px;
+}
+.combo-option:hover{ background:var(--chip); }
+.combo-empty{
+  padding:6px 9px;
+  border-radius:9px;
+  color:var(--muted);
+  font-size:11.5px;
+}
+
+/* micro-ajuste para labels e textos pequenos */
+.sidebar h3{ letter-spacing:.07em; }
+
+</style>
+<style>
+/* === V3.11.2: Toggle dentro do cabeçalho da sidebar + botão flutuante ao recolher === */
+#sidebar{ position: relative; }
+.sidebar-toggle, .sidebar-toggle-floating, .sidebar-toggle-inside{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:7px 10px; border-radius:999px; font-weight:700; letter-spacing:.02em; cursor:pointer;
+  background:rgba(15,18,22,.92); color:#E5E7EB; border:1px solid #23262B;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+/* Esconde toggle antigo (se existir de versões anteriores) */
+.sidebar-toggle{ display:none !important; }
+.sidebar-toggle-inside{
+  position:absolute; top:6px; right:8px; z-index:30;
+}
+.sidebar-toggle-floating{
+  position:fixed; top:72px; left:12px; z-index:60; display:none;
+}
+/* Mostrar apenas quando recolhido */
+body.sidebar-collapsed .sidebar-toggle-floating{ display:inline-flex; }
+body.sidebar-collapsed #sidebar .sidebar-toggle-inside{ display:none; }
+
+/* Layout colapsado continua funcionando */
+body.sidebar-collapsed .app{ grid-template-columns:0 1fr !important; }
+body.sidebar-collapsed .sidebar{ width:0 !important; min-width:0 !important; padding:0 !important; border-right:none !important; overflow:hidden !important; }
+
+/* Remover 'Aplicar filtros' do sidebar (auto-refresh) */
+#aplicar{ display:none !important; }
+</style>
+<style>
+  /* Botão 'Anúncio' — azul suave */
+  .btn-anuncio{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 14px;
+    min-width:96px;
+    height:36px;
+    border-radius:10px;
+    border:1px solid rgba(96,165,250,.4);
+    background:#60a5fa; /* azul suave */
+    color:#0b1220;      /* texto escuro para bom contraste */
+    font-weight:700;
+    text-decoration:none;
+    line-height:1;
+    transition:box-shadow .2s ease, transform .06s ease;
+  }
+  .btn-anuncio:hover{
+    box-shadow:0 0 0 1px rgba(96,165,250,.6), 0 8px 20px rgba(0,0,0,.3);
+  }
+  .btn-anuncio:active{ transform: translateY(1px); }
+
+  /* Garantir alinhamento vertical central na célula de ações */
+  td
+</style>
+
+
+<style>
+  /* Override: reduzir em ~25% o tamanho do botão Anúncio */
+  .btn-anuncio{
+    padding:7.5px 10.5px;
+    min-width:72px;
+    height:27px;
+    border-radius:7.5px;
+    font-size:0.75rem; /* ~12px */
+  }
+  .btn-anuncio:active{
+    transform: translateY(1px); /* mantém o efeito sem escalar adicionalmente */
+  }
+</style>
+
+
+<style id="fix-double-scroll">
+  /* === Fix: uma única rolagem vertical (remove altura fixa do frame dos cards) === */
+  .table-wrap{
+    height:auto !important;
+    max-height:none !important;
+    overflow-y:visible !important;   /* sem rolagem vertical interna */
+    overflow-x:auto;                 /* se precisar, só rolagem horizontal */
+  }
+
+  /* Cabeçalho da tabela 'sticky' respeitando as barras superiores */
+  thead th{ top: var(--stack-offset, 0px) !important; }
+
+  /* Responsividade leve nos cards/linhas */
+  .thumb{ width:120px; height:90px; }
+  @media (max-width: 980px){
+    .thumb{ width:96px; height:72px; }
+    .title-col{ min-width:220px; }
+  }
+  @media (max-width: 760px){
+    .thumb{ width:80px; height:60px; }
+    .title-col{ min-width:180px; }
+  }
+</style>
+  <script type="application/x-unificador">
+// Calcula o deslocamento total das barras "sticky" (toolbar + filtro intervalo)
+// para evitar que o cabeçalho da tabela fique escondido.
+(function(){
+  function updateStackOffset(){
+    var tb = document.querySelector('.toolbar');
+    var itb = document.querySelector('.intervalo-toolbar-compact');
+    var top = (tb ? tb.offsetHeight : 0) + (itb ? itb.offsetHeight : 0);
+    document.documentElement.style.setProperty('--stack-offset', top + 'px');
+  }
+  window.addEventListener('load', updateStackOffset);
+  window.addEventListener('resize', updateStackOffset);
+})();
+</script>
+
+
+<style id="fix-sidebar-sticky">
+  /* Sidebar fixa (sticky) sem rolagem interna */
+  .sidebar{
+    position: sticky !important;
+    top: 0 !important;
+    height: auto !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+  }
+</style>
+
+
+<style id="fix-sidebar-top-gap">
+  .sidebar{ margin-top:0 !important; padding-top:0 !important; }
+  .sidebar .brand{ margin-top:0 !important; }
+</style>
+
+
+<style id="qr-min-css">
+.qr-modal{position:fixed;inset:0;display:none;place-items:center;z-index:99999;padding:24px}
+.qr-modal[aria-hidden="false"]{display:grid}
+.qr-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(2px) saturate(120%)}
+.qr-sheet{position:relative;z-index:1;width:min(620px,96vw);background:#0f1216;color:#e5e7eb;border:1px solid #263041;border-radius:20px;padding:16px;box-shadow:0 20px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:12px;align-items:center}
+.qr-title{margin:0;font-size:18px;font-weight:800;align-self:stretch;display:flex;justify-content:space-between}
+.qr-title .x{background:#0b0f14;color:#e5e7eb;border:1px solid #253144;border-radius:10px;padding:6px 10px;cursor:pointer}
+#qrCanvas{image-rendering:crisp-edges;width:520px;height:520px;max-width:90vw;max-height:75vh;border-radius:12px;background:#fff}
+#qrImgFallback{display:none;max-width:90vw;max-height:75vh;border-radius:12px;background:#fff}
+.btn-compartilhar{display:inline-flex;align-items:center;justify-content:center;height:26px!important;min-width:64px!important;padding:7px 10px!important;border-radius:8px!important;font-size:.75rem!important;font-weight:800;background:#22c55e;color:#0b1b12;border:1px solid rgba(34,197,94,.45);cursor:pointer;line-height:1;margin-top:6px}
+</style>
+
+<style id="actions-grid-layout">
+/* Grid da célula de ações:
+   - Linha 1: Anúncio (colspan 2)
+   - Linha 2: QR (esq) + IMG (dir)
+*/
+td.actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: minmax(36px, auto);
+  gap:8px;
+  align-items:stretch;
+
+  height: 100%;
+
+  align-content: center;
+
+  justify-content: center;
+}
+td.actions br{ display:none !important; } /* esconde <br> inserido pelo script do QR */
+
+/* Anúncio ocupa linha inteira */
+td.actions .btn-anuncio{ grid-column: 1 / span 2; }
+
+/* Alturas e visuais padronizados */
+td.actions .btn-anuncio,
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:36px;
+  padding:10px 14px;
+  border-radius:10px;
+  width:100%;
+}
+
+/* QR somente ícone (texto permanece para manter dinâmica) */
+td.actions .btn-compartilhar{
+  position:relative;
+  color:transparent;
+  text-shadow:none;
+  font-size:0;
+}
+td.actions .btn-compartilhar::before{
+  content:"";
+  display:inline-block;
+  width:18px;
+  height:18px;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%230b0f14" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm6-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zM15 13h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v6h-6v-2h4v-4z"/></svg>');
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
+  color:inherit;
+}
+
+/* Cores coerentes com o projeto (versão com mais presença + hover marcado) */
+td.actions .btn-anuncio{
+  background:#3b82f6;
+  color:#0b0f14;
+  font-weight:700;
+  border:1px solid rgba(15,23,42,.25);
+}
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  background:#16a34a;
+  color:#0b0f14;
+  border:1px solid rgba(15,23,42,.22);
+}
+
+/* Hover */
+td.actions .btn-anuncio:hover{
+  filter:none;
+  box-shadow:0 0 0 1px rgba(59,130,246,.45), 0 8px 18px rgba(15,23,42,.35);
+  transform:translateY(-1px);
+}
+td.actions .btn-compartilhar:hover,
+td.actions .btn-img:hover{
+  filter:none;
+  box-shadow:0 0 0 1px rgba(22,163,74,.35), 0 8px 18px rgba(15,23,42,.3);
+  transform:translateY(-1px);
+}
+td.actions .btn-anuncio:active,
+td.actions .btn-compartilhar:active,
+td.actions .btn-img:active{
+  transform:translateY(0);
+  box-shadow:none;
+}
+</style>
+<style id="actions-align-compact">
+/* Compact height for all action buttons */
+:root { --btn-h: 22px; }
+
+td.actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: var(--btn-h);
+  gap:8px;
+  align-items:stretch;
+}
+td.actions br{ display:none !important; }
+
+/* Top button spans the row */
+td.actions .btn-anuncio{ grid-column: 1 / span 2; }
+
+/* Normalize ALL buttons */
+td.actions .btn-anuncio,
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:var(--btn-h) !important;
+  min-height:var(--btn-h) !important;
+  padding:6px 10px !important;
+  border-radius:12px !important;
+  width:100% !important;
+  margin:0 !important;
+}
+
+/* Two bottom buttons must be visually identical */
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  background:#22c55e;
+  color:#0b0f14;
+  border:1px solid rgba(0,0,0,.1);
+}
+
+/* Icon-only QR (text preserved invisível para manter dinâmica) */
+td.actions .btn-compartilhar{
+  position:relative;
+  color:transparent;
+  text-shadow:none;
+  font-size:0;
+}
+td.actions .btn-compartilhar::before{
+  content:"";
+  display:inline-block;
+  width:18px; height:18px;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%230b0f14" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm6-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zM15 13h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v6h-6v-2h4v-4z"/></svg>');
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:contain;
+  color:inherit;
+}
+
+/* Anúncio mantém cor azul, porém com altura compacta */
+td.actions .btn-anuncio{
+  background:#69a7ff;
+  color:#0b0f14;
+  font-weight:700;
+  border:1px solid rgba(0,0,0,.1);
+}
+
+/* Hovers */
+td.actions .btn-anuncio:hover{ filter:brightness(1.03); }
+td.actions .btn-compartilhar:hover,
+td.actions .btn-img:hover{ filter:brightness(1.05); }
+</style>
+<style id="actions-center-and-icononly">
+/* Centralizar o bloco de ações dentro do card */
+td.actions{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: var(--btn-h, 22px);
+  gap:8px;
+  align-items:stretch;
+  width: 240px;          /* largura fixa para garantir alinhamento das duas colunas */
+  margin: 0 auto;        /* centraliza na célula */
+}
+
+td.actions .btn-anuncio{ grid-column: 1 / span 2; }
+
+/* Normalização (altura/raio/padding iguais) */
+td.actions .btn-anuncio,
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:var(--btn-h, 22px) !important;
+  min-height:var(--btn-h, 22px) !important;
+  padding:6px 10px !important;
+  border-radius:12px !important;
+  width:100% !important;
+  margin:0 !important;
+}
+
+/* QR como ícone puro */
+td.actions .btn-compartilhar.icon-only{
+  padding:0 !important;
+}
+td.actions .btn-compartilhar.icon-only svg{
+  display:block;
+}
+
+/* Mantém cores */
+td.actions .btn-anuncio{ background:#69a7ff; color:#0b0f14; font-weight:700; border:1px solid rgba(0,0,0,.1); }
+td.actions .btn-compartilhar, td.actions .btn-img{ background:#22c55e; color:#0b0f14; border:1px solid rgba(0,0,0,.1); }
+</style>
+<style id="actions-compact-v2">
+:root { --btn-h: 22px; }
+
+/* Center the block and make columns size to content (icons) */
+td.actions{
+  display:grid !important;
+  grid-template-columns: auto auto !important;
+  grid-auto-rows: var(--btn-h) !important;
+  gap:8px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:auto !important;
+  margin:0 auto !important;
+}
+
+/* Top button spans both columns, but width adapts to content and stays centered */
+td.actions .btn-anuncio{
+  grid-column: 1 / span 2 !important;
+  height:var(--btn-h) !important;
+  min-height:var(--btn-h) !important;
+  padding:6px 12px !important;
+  border-radius:12px !important;
+  width:auto !important;
+  justify-self:center !important;
+}
+
+/* Remove leftover full-width rules from previous patches */
+td.actions .btn-anuncio,
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  margin:0 !important;
+}
+
+/* Square icon buttons (QR + IMG) — width equals height */
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  height:var(--btn-h) !important;
+  width:var(--btn-h) !important;
+  min-height:var(--btn-h) !important;
+  min-width:var(--btn-h) !important;
+  padding:0 !important;
+  border-radius:12px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+/* Ensure only ONE icon for QR: kill any ::before icons from earlier patches */
+td.actions .btn-compartilhar::before{ content:none !important; display:none !important; }
+
+/* Keep colors */
+td.actions .btn-anuncio{ background:#69a7ff !important; color:#0b0f14 !important; font-weight:700 !important; border:1px solid rgba(0,0,0,.1) !important; }
+td.actions .btn-compartilhar, td.actions .btn-img{ background:#22c55e !important; color:#0b0f14 !important; border:1px solid rgba(0,0,0,.1) !important; }
+
+/* Icon sizing inside buttons */
+td.actions .btn-compartilhar svg,
+td.actions .btn-img svg{
+  width:16px !important;
+  height:16px !important;
+  display:block !important;
+}
+
+/* Hide QR text completely (logic preserved elsewhere) */
+td.actions .btn-compartilhar{ font-size:0 !important; color:transparent !important; text-shadow:none !important; }
+</style>
+<style id="actions-wider-left">
+:root { --btn-h: 24px; --btn-w: 32px; }  /* 24px height; a little wider (32px) */
+
+td.actions{
+  display:grid !important;
+  grid-template-columns: auto auto !important;
+  grid-auto-rows: var(--btn-h) !important;
+  gap:8px !important;
+  align-items:center !important;
+  justify-content:flex-start !important;  /* align with card content */
+  width:100% !important;
+  margin:0 !important;
+}
+
+/* 'Anúncio' centered on its content, not stretched */
+td.actions .btn-anuncio{
+  grid-column: 1 / span 2 !important;
+  height:var(--btn-h) !important;
+  min-height:var(--btn-h) !important;
+  padding:6px 12px !important;
+  border-radius:12px !important;
+  width:auto !important;
+  justify-self:start !important;  /* align with the left edge like other columns */
+}
+
+/* Bottom buttons slightly wider rectangles */
+td.actions .btn-compartilhar,
+td.actions .btn-img{
+  height:var(--btn-h) !important;
+  width:var(--btn-w) !important;
+  min-height:var(--btn-h) !important;
+  min-width:var(--btn-w) !important;
+  padding:0 !important;
+  border-radius:12px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+/* Ensure only one icon (override prior ::before) */
+td.actions .btn-compartilhar::before{ content:none !important; display:none !important; }
+
+/* Icon sizing */
+td.actions .btn-compartilhar svg,
+td.actions .btn-img svg{
+  width:18px !important;
+  height:18px !important;
+  display:block !important;
+}
+
+/* Keep colors */
+td.actions .btn-anuncio{ background:#69a7ff !important; color:#0b0f14 !important; font-weight:700 !important; border:1px solid rgba(0,0,0,.1) !important; }
+td.actions .btn-compartilhar, td.actions .btn-img{ background:#22c55e !important; color:#0b0f14 !important; border:1px solid rgba(0,0,0,.1) !important; }
+</style>
+<style id="detail-modal-style">
+/* Fullscreen overlay */
+.detail-overlay{ position:fixed; inset:0; display:none; z-index:9999; }
+.detail-overlay.open{ display:block; }
+.detail-backdrop{ position:absolute; inset:0; background:rgba(11,15,20,.72); backdrop-filter: blur(2px); }
+.detail-window{ position:absolute; inset:4vh 4vw; background:#0b0f14; border:1px solid #253144; border-radius:16px; box-shadow: 0 10px 40px rgba(0,0,0,.4); overflow:auto; }
+.detail-close{ position:absolute; top:10px; right:12px; border:none; background:#121a24; color:#e5e7eb; border:1px solid #253144; border-radius:10px; padding:6px 10px; cursor:pointer; z-index:1; }
+
+/* Card layout */
+.detail-card{ display:grid; grid-template-columns: 1.2fr 1fr; gap:24px; padding:24px; color:#e5e7eb; }
+.detail-card .media{ background:#0f1720; border:1px solid #253144; border-radius:14px; display:flex; align-items:center; justify-content:center; min-height:320px; }
+.detail-card .media img{ max-width:100%; max-height:70vh; border-radius:12px; display:block; }
+.detail-card .media .noimg{ color:#94a3b8; font-size:14px; }
+
+.detail-card .info h2{ margin:0 0 4px; font-size:22px; font-weight:800; }
+.detail-card .info .addr{ color:#9fb3c8; margin-bottom:10px; }
+.detail-card .info .price{ font-size:20px; font-weight:700; color:#c7f284; margin:6px 0 14px; }
+
+.detail-card .grid{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; }
+.detail-card .grid.small{ grid-template-columns: repeat(2, minmax(0,1fr)); margin-top:12px; }
+
+.detail-card .kv{ background:#101925; border:1px solid #253144; border-radius:10px; padding:10px 12px; }
+.detail-card .kv span{ display:block; font-size:12px; color:#a0b3c6; }
+.detail-card .kv strong{ display:block; font-size:16px; color:#e5e7eb; }
+
+.detail-card .btns{ margin-top:16px; }
+.detail-card .btns .btn{ background:#69a7ff; color:#0b0f14; font-weight:700; padding:10px 14px; border-radius:10px; text-decoration:none; display:inline-block; }
+
+/* Responsive */
+@media (max-width: 900px){
+  .detail-window{ inset:2vh 3vw; }
+  .detail-card{ grid-template-columns: 1fr; }
+  .detail-card .media img{ max-height:40vh; }
+}
+</style>
+<style id="detail-card-tweaks">
+.detail-card .info h2{ display:flex; flex-wrap:wrap; gap:.5ch; align-items:baseline; }
+.detail-card .info h2 .edif{ color:#69a7ff; font-weight:800; }
+.detail-card .grid.small .kv strong{ font-weight:700; }
+</style>
+
+<style id="actions-override-25px">
+/* Força respiro vertical de ~25px no bloco de botões */
+table tbody tr td.actions{
+  padding-top: 25px !important;
+  padding-bottom: 25px !important;
+}
+</style>
+
+
+<style id="actions-override-30px">
+/* Força respiro vertical de ~30px no bloco de botões */
+table tbody tr td.actions{
+  padding-top: 30px !important;
+  padding-bottom: 30px !important;
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style id="headers-unificados-v7">
+:root{
+  --hdr-bg-solid: rgba(15,18,22,0.96); /* TOM ÚNICO (igual thead) */
+  --hdr-blur: 2px;
+  --hdr-sat: 110%;
+}
+
+/* Barras superiores com MESMO tom e tratamento */
+.toolbar,
+.intervalo-toolbar-compact{
+  background: var(--hdr-bg-solid) !important;
+  border-bottom: 1px solid var(--border) !important;
+  -webkit-backdrop-filter: saturate(var(--hdr-sat)) blur(var(--hdr-blur)) !important;
+  backdrop-filter: saturate(var(--hdr-sat)) blur(var(--hdr-blur)) !important;
+}
+
+/* Scroll no body; sem "scroll interno" no container da lista */
+.table-wrap{
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+  position:relative;
+}
+
+/* === FIX: Cabeçalho da tabela sempre FIXO ao rolar, colado na barra de cima ===
+   A forma mais compatível é deixar os <th> como sticky e usar um offset calculado
+   (toolbar + intervalo-toolbar) via --stack-offset.
+*/
+.table-wrap table thead th{
+  position: sticky !important;
+  top: var(--stack-offset, 0px) !important;
+  z-index: 3 !important; /* abaixo da toolbar (5) e da barra de intervalo (4), acima dos cards */
+  background: var(--hdr-bg-solid) !important;
+  -webkit-backdrop-filter: saturate(var(--hdr-sat)) blur(var(--hdr-blur)) !important;
+  backdrop-filter: saturate(var(--hdr-sat)) blur(var(--hdr-blur)) !important;
+  border-bottom: 1px solid var(--border) !important;
+
+  padding-block: 10px !important;
+  letter-spacing: .06em;
+  color: var(--muted) !important;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+</style>
+
+  <link rel="stylesheet" href="assets/theme.css">
+
+  <!-- Popup + Lazy load (file:// OK) -->
+  <style>
+    .boot-overlay{position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.55); backdrop-filter:saturate(140%) blur(6px); -webkit-backdrop-filter:saturate(140%) blur(6px); padding:18px;}
+    .boot-modal{width:min(720px, 96vw); border:1px solid rgba(255,255,255,.08); border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45); background:var(--panel, #0b0f14); color:var(--text, #e7eef7); overflow:hidden;}
+    .boot-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px;
+      border-bottom:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));}
+    .boot-title{font-weight:800; letter-spacing:.2px;}
+    .boot-close{width:34px; height:34px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04); color:inherit; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;}
+    .boot-close:hover{background:rgba(255,255,255,.08);}
+    .boot-body{padding:14px 16px 8px 16px; line-height:1.45; font-size:14px; white-space:pre-wrap;}
+    .boot-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px 16px 16px;}
+    .boot-status{font-size:12px; color:var(--muted, #9aa8b6); display:flex; align-items:center; gap:10px;}
+    .boot-spinner{width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.25); border-top-color:rgba(255,255,255,.75);
+      animation:bootspin .9s linear infinite;}
+    .boot-check{
+      display:none;
+      width:16px; height:16px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.06);
+      font-size:12px;
+      font-weight:900;
+      line-height:1;
+      align-items:center;
+      justify-content:center;
+    }
+    @keyframes bootspin{to{transform:rotate(360deg);}}
+    .boot-action{padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
+      color:inherit; cursor:pointer; font-weight:700;}
+    .boot-action[disabled]{opacity:.55; cursor:not-allowed;}
+    body[data-theme="light"] .boot-modal{background:#ffffff; color:#0b1220; border:1px solid rgba(0,0,0,.10); box-shadow:0 22px 60px rgba(0,0,0,.20);}
+    body[data-theme="light"] .boot-head{border-bottom:1px solid rgba(0,0,0,.08); background:linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.015));}
+    body[data-theme="light"] .boot-close{border:1px solid rgba(0,0,0,.14); background:rgba(0,0,0,.04);}
+    body[data-theme="light"] .boot-close:hover{background:rgba(0,0,0,.06);}
+    body[data-theme="light"] .boot-status{color:rgba(0,0,0,.55);}
+    body[data-theme="light"] .boot-spinner{border-color:rgba(0,0,0,.20); border-top-color:rgba(0,0,0,.55);}
+    body[data-theme="light"] .boot-check{border:1px solid rgba(0,0,0,.18); background:rgba(0,0,0,.04);}
+    body[data-theme="light"] .boot-action{border:1px solid rgba(0,0,0,.14); background:rgba(0,0,0,.04);}
+  </style>
+  <script src="popup.txt"></script>
+
+</head>
+<body>
+
+  <!-- Boot overlay: aparece antes de carregar a base -->
+  <div id="bootOverlay" class="boot-overlay" role="dialog" aria-modal="true" aria-label="Aviso e carregamento">
+    <div class="boot-modal">
+      <div class="boot-head">
+        <div class="boot-title">Aviso</div>
+        <button id="bootClose" class="boot-close" title="Fechar" aria-label="Fechar">✕</button>
+      </div>
+      <div id="bootBody" class="boot-body">Carregando…</div>
+      <div class="boot-foot">
+        <div class="boot-status">
+          <span id="bootSpinner" class="boot-spinner" aria-hidden="true"></span>
+          <span id="bootCheck" class="boot-check" aria-hidden="true">✓</span>
+          <span id="bootStatusText">Carregando base de imóveis…</span>
+        </div>
+        <button id="bootAction" class="boot-action" disabled>Carregando…</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var overlay = document.getElementById('bootOverlay');
+    var bodyEl  = document.getElementById('bootBody');
+    var closeBtn= document.getElementById('bootClose');
+    var action  = document.getElementById('bootAction');
+    var status  = document.getElementById('bootStatusText');
+    var spinner = document.getElementById('bootSpinner');
+    var check   = document.getElementById('bootCheck');
+
+    function safeText(v){ try{ return String(v == null ? '' : v); }catch(e){ return ''; } }
+    function setBodyText(t){ bodyEl.textContent = safeText(t).trim() || 'Carregando…'; }
+
+    function setIconState(state){
+      if(!spinner || !check) return;
+      if(state === 'ready'){
+        spinner.style.display = 'none';
+        check.style.display = 'inline-flex';
+        check.textContent = '✓';
+      } else if(state === 'error'){
+        spinner.style.display = 'none';
+        check.style.display = 'inline-flex';
+        check.textContent = '!';
+      } else {
+        // loading
+        spinner.style.display = 'inline-block';
+        check.style.display = 'none';
+        check.textContent = '✓';
+      }
+    }
+
+    if (typeof window.__POPUP_TEXT__ === 'string') setBodyText(window.__POPUP_TEXT__);
+    else setBodyText('Aviso\n\n(Arquivo popup.txt não encontrado ou inválido)');
+
+    setIconState('loading');
+
+    function applyBootDefaults(){
+      try{
+        // Defaults desejados: Hoje + Entrou + Venda (modo intervalo)
+        try{ window.__MODE_TOTAL = false; }catch(e){}
+        try{
+          if(window.state && window.state.filtro){
+            window.state.filtro.mov = 'entrou';
+            window.state.filtro.neg = 'venda';
+          }
+        }catch(e){}
+        // Sincroniza UI/estado via clique (se handlers já estiverem prontos)
+        var negBtn = document.querySelector('#negociacaoToggle button[data-neg="venda"]');
+        if(negBtn && !negBtn.classList.contains('active')) negBtn.click();
+        var movBtn = document.querySelector('#movToggle button[data-mov="entrou"]');
+        if(movBtn && !movBtn.classList.contains('active')) movBtn.click();
+
+        var hojeBtn = document.getElementById('qHoje');
+        if(hojeBtn){
+          hojeBtn.click(); // aplica HOJE (D -> D) e renderiza
+          return true;
+        }
+        if(typeof window.__INIT_INTERVAL === 'function'){
+          window.__INIT_INTERVAL();
+          return true;
+        }
+      }catch(e){}
+      return false;
+    }
+
+    function hide(){
+      overlay.style.display = 'none';
+      window.__BOOT_OVERLAY_CLOSED = true;
+
+      // Aplica defaults após fechar o popup (com tentativas, pois scripts podem ainda estar carregando)
+      var tries = 0;
+      (function tick(){
+        tries++;
+        var ok = applyBootDefaults();
+        if(ok) return;
+        if(tries < 80) setTimeout(tick, 50); // até ~4s
+      })();
+    }
+    closeBtn.onclick = hide;
+    action.onclick = hide;
+    document.addEventListener('keydown', function(e){ if(e && e.key === 'Escape') hide(); });
+
+    function guessDataFile(){
+      try{
+        var path = (location && location.pathname) ? location.pathname : '';
+        var file = path.split('/').pop() || '';
+        var base = file.replace(/\.[Hh][Tt][Mm][Ll]?$/, '');
+        if(!base) base = 'novidades_intervalo';
+        return base + '_data.js';
+      }catch(e){ return 'novidades_intervalo_data.js'; }
+    }
+    function loadScript(src){
+      return new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function(){ resolve(); };
+        s.onerror = function(){ reject(new Error('Falha ao carregar: ' + src)); };
+        document.head.appendChild(s);
+      });
+    }
+    async function runDeferredScripts(){
+      var nodes = Array.prototype.slice.call(document.querySelectorAll('script[type="application/x-unificador"]'));
+      for (var i=0;i<nodes.length;i++){
+        var n = nodes[i];
+        var src = n.getAttribute('data-src');
+        if (src){
+          var s = document.createElement('script');
+          s.src = src;
+          if (n.getAttribute('data-defer') === '1') s.defer = true;
+          if (n.getAttribute('data-async') === '1') s.async = true;
+          var id = n.getAttribute('data-id');
+          if (id) s.id = id;
+          await new Promise(function(res, rej){
+            s.onload = res;
+            s.onerror = function(){ rej(new Error('Falha ao carregar: ' + src)); };
+            document.head.appendChild(s);
+          });
+        } else {
+          var si = document.createElement('script');
+          var oid = n.getAttribute('data-id');
+          if (oid) si.id = oid;
+          si.text = n.text || n.textContent || '';
+          document.head.appendChild(si);
+        }
+      }
+    }
+    async function boot(){
+      setIconState('loading');
+      var dataFile = guessDataFile();
+      status.textContent = 'Carregando base de imóveis…';
+      action.textContent = 'Carregando…';
+      action.disabled = true;
+
+      requestAnimationFrame(function(){
+        setTimeout(async function(){
+          try{
+            await loadScript(dataFile);
+          }catch(err1){
+            try{
+              await loadScript('data.js');
+            }catch(err2){
+              setIconState('error');
+              status.textContent = 'Não foi possível carregar a base de imóveis.';
+              action.textContent = 'Fechar';
+              action.disabled = false;
+              console.error(err2);
+              return;
+            }
+          }
+          try{
+            status.textContent = 'Inicializando interface…';
+            if (document.readyState === 'loading') {
+              await new Promise(function(res){ document.addEventListener('DOMContentLoaded', res, {once:true}); });
+            }
+            await runDeferredScripts();
+            setIconState('ready');
+            status.textContent = 'Pronto.';
+            action.textContent = 'Abrir imóveis';
+            action.disabled = false;
+          }catch(err3){
+            setIconState('error');
+            status.textContent = 'Erro ao iniciar a interface.';
+            action.textContent = 'Fechar';
+            action.disabled = false;
+            console.error(err3);
+          }
+        }, 0);
+      });
+    }
+    boot();
+  })();
+  </script>
+
+<div class="app" style="display:grid; grid-template-columns: 320px minmax(0,1fr); align-items:start;">
+  
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><span class="dot"></span><h1>Filtros</h1><div class="last-update" id="lastUpdate">Última atualização: <span class="ts">12/02/2026 17:36</span></div></div>
+
+  <!-- DATA (de / até) -->
+  <div class="group">
+    <h3>Data (de / até)</h3>
+    <div class="row" id="dateRow" style="gap:8px">
+      <input type="date" id="dtIni" class="input">
+      <input type="date" id="dtFim" class="input">
+    </div>
+  </div>
+
+  <!-- Presets como chips -->
+  <div class="group">
+    <h3>Filtros rápidos</h3>
+	    <div class="row" id="quickFiltersRow">
+	      <button id="qHoje" class="chip-date" active>Hoje</button>
+	      <button id="qSemana" class="chip-date ghost">Semana</button>
+	      <button id="qMes" class="chip-date ghost">Mês</button>
+	      <button id="q7" class="chip-date ghost">7D</button>
+	      <button id="q30" class="chip-date ghost">30D</button>
+	    </div>
+  </div>
+
+  <!-- Movimento ENTROU / SAIU -->
+  <div class="group" id="movGroup">
+    <h3>Movimento</h3>
+    <div class="toggle-mov" id="movToggle" aria-label="Filtro Entrou/Saiu/Total">
+      <button type="button" data-mov="entrou" class="active">Entrou</button>
+      <button type="button" data-mov="saiu">Saiu</button>
+      <button type="button" data-mov="total">Total</button>
+    </div>
+  </div>
+
+  <!-- Negociação -->
+  <div class="group">
+    <h3>Negociação</h3>
+    <div class="toggle" id="negociacaoToggle">
+      <button data-neg="todas">Todas</button>
+      <button data-neg="venda" class="active">Venda</button>
+      <button data-neg="locacao">Locação</button>
+    </div>
+  </div>
+
+  <!-- Tipologia -->
+  <div class="group">
+    <h3>Tipologia</h3>
+    <select id="tipo" class="input">
+      
+        <option value="">Todas</option>
+        <option>Apartamento</option>
+        <option>Casa</option>
+        <option>Terreno</option>
+        <option>Sala Comercial</option>
+        <option>Galpão</option>
+        <option>Kitnet Studio</option>
+        <option>Sobrado</option>
+        <option>Casa Sobrado</option>
+      
+    </select>
+  </div>
+
+  
+
+  <!-- Bairro -->
+  <div class="group">
+    <h3>Bairro</h3>
+    <div class="combo" id="bairroCombo">
+      <input id="bairro" class="input combo-input" placeholder="Digite para filtrar (ex.: Zona 07)" autocomplete="off">
+      <button type="button" class="combo-btn" aria-label="Abrir lista de bairros" title="Abrir lista">▾</button>
+      <div class="combo-menu" id="bairroMenu" role="listbox" aria-label="Lista de bairros"></div>
+    </div>
+  </div>
+
+  <!-- Faixa de preço -->
+  <div class="group">
+    <h3>Faixa de preço</h3>
+    <div class="row" style="gap:8px">
+      <input id="min" class="input" placeholder="Mín">
+      <input id="max" class="input" placeholder="Máx">
+    </div>
+  </div>
+
+  <!-- Quartos / Suítes / BWC / Vagas -->
+  <div class="group">
+    <h3>Quartos / Suítes / BWC / Vagas</h3>
+    <div class="row" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px;">
+      <input id="qtdQuartos" class="input" type="number" min="0" placeholder="Quartos ≥">
+      <input id="qtdSuites"  class="input" type="number" min="0" placeholder="Suítes ≥">
+      <input id="qtdBwc"     class="input" type="number" min="0" placeholder="BWC ≥">
+      <input id="qtdVagas"   class="input" type="number" min="0" placeholder="Vagas ≥">
+    </div>
+  </div>
+
+  <!-- Áreas (m²) -->
+  <div class="group">
+    <h3>Áreas (m²)</h3>
+    <div class="row" id="areasRow">
+      <input id="minUtil"    class="input" type="number" min="0" placeholder="Útil ≥">
+      <input id="minTotal"   class="input" type="number" min="0" placeholder="Total ≥">
+      <input id="minTerreno" class="input" type="number" min="0" placeholder="Terreno ≥">
+    </div>
+  </div>
+
+  <div class="divider"></div>
+</aside>
+<main class="content" style="grid-column:2; width:100%;">
+    <div class="toolbar">
+      <div class="title">Listagem de imóveis</div>
+      <span class="results-chip" id="countBadge">0 resultados</span>
+      <div class="spacer"></div>
+      <input id="searchTop" class="input search" placeholder="Pesquisar rapidamente…">
+      <label class="muted">Itens por página</label>
+      <select id="pageSize" class="input select">
+        <option>10</option>
+        <option selected>25</option>
+        <option>50</option>
+        <option>100</option>
+      </select>
+      <span id="themeToggleMount" class="topbar-toggle-mount"></span>
+      <button id="fullscreenToggleBtn" class="fullscreen-toggle topbar" type="button" aria-label="Tela cheia">
+        <span class="icon" aria-hidden="true">⤢</span>
+      </button>
+    </div>
+
+    
+<!-- Intervalo integrado (V3.11 FINAL - auto refresh) -->
+<style>
+  /* :root palette agora centralizada em theme.css */
+  .intervalo-toolbar-compact{
+    display:flex; align-items:center; flex-wrap:wrap;
+    column-gap:12px; row-gap:10px;
+    padding:10px 16px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#0f1216,#0f1216cc 70%,transparent);
+    position:sticky; top:60px; z-index:4;
+  }
+  .intervalo-toolbar-compact label{display:inline-block; vertical-align:middle}
+  .intervalo-toolbar-compact input,
+  .intervalo-toolbar-compact select,
+  .intervalo-toolbar-compact button{
+    display:inline-block; vertical-align:middle;
+    flex:0 0 auto; width:auto !important; max-width:260px;
+    padding:8px 12px; border:1px solid var(--border); border-radius:10px;
+    background:#0c0f14; color:#E5E7EB; font-weight:600;
+  }
+  #movSel{ min-width:180px }
+  .intervalo-toolbar-compact .break{ flex-basis:100%; height:0; }
+  .muted{color:var(--muted); font-size:12px; margin-left:6px}
+</style>
+  <script type="application/x-unificador">
+  // --- Dados diários injetados pelo gerador ---
+  const DAILY = (typeof window.__DAILY_JSON__!=='undefined' ? window.__DAILY_JSON__ : {});
+  const SNAPSHOT_TOTAL = (typeof window.__SNAPSHOT_TOTAL_JSON__!=='undefined' ? window.__SNAPSHOT_TOTAL_JSON__ : []);
+  const dates = Object.keys(DAILY||{}).sort();
+  
+  // === Situation date map from DAILY and tooltip helpers ===
+  function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function daysFrom(ymd){
+    try{
+      var d0 = new Date(ymd+'T00:00:00');
+      var now = new Date(); var d1 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var ms = d1 - d0; var days = Math.floor(ms / 86400000);
+      return (days<0?0:days);
+    }catch(e){ return 0; }
+  }
+  const MOVDATE = (function(){
+    var map = Object.create(null);
+    try{
+      Object.keys(DAILY||{}).forEach(function(d){
+        var day = DAILY[d]||{};
+        (day.entrou||[]).forEach(function(it){ if(it && it.url) map[it.url] = {dt:d, mov:'entrou'}; });
+        (day.saiu||[]).forEach(function(it){ if(it && it.url) map[it.url] = {dt:d, mov:'saiu'}; });
+      });
+    }catch(e){}
+    return map;
+  })();
+  function tipFor(it){
+    try{
+      var meta = it && it.url ? MOVDATE[it.url] : null;
+      if(!meta || !meta.dt) return '';
+      var parts = String(meta.dt).split('-'); var dd = (parts[2]||'??')+'/'+(parts[1]||'??')+'/'+(parts[0]||'????');
+      var days = daysFrom(meta.dt);
+      var verb = meta.mov==='saiu' ? 'Saiu' : 'Entrou';
+      return verb + ' em ' + dd + ' · ' + days + ' dia' + (days===1?'':'s');
+    }catch(e){ return ''; }
+  }
+// --- Controles ---
+  const dtIni = document.getElementById('dtIni');
+  const dtFim = document.getElementById('dtFim');
+  const movSel = document.getElementById('movSel');
+  const qHoje = document.getElementById('qHoje');
+  const qSemana = document.getElementById('qSemana');
+  const q7 = document.getElementById('q7'), q30=document.getElementById('q30'), qMes=document.getElementById('qMes');
+  const verTudo = document.getElementById('verTudo');
+  const sum = document.getElementById('sumIntervalo');
+  const countBadge = document.getElementById('countBadge');
+  function ymd(d){ return d.toISOString().slice(0,10); }
+  const BASE_TODAY = (dates && dates.length ? dates[dates.length-1] : ymd(new Date()));
+  if(dates.length){
+    dtIni.value=BASE_TODAY; dtFim.value=BASE_TODAY;
+    dtIni.min=dates[0]; dtIni.max=dates[dates.length-1];
+    dtFim.min=dates[0]; dtFim.max=dates[dates.length-1];
+  }
+  function collectInterval(){
+    if(!dates.length) return [];
+    const a=dtIni.value, b=dtFim.value;
+    const sel = (movSel && movSel.value) ? movSel.value : 'ambos';
+    const within = dates.filter(d => d>=a && d<=b);
+    let arr=[];
+    const __tag = (it, mov)=>{ try{ if(it && (it.mov==null || it.mov==='')) it.mov=mov; }catch(e){} return it; };
+    within.forEach(d=>{
+      if(sel==='entrou' || sel==='ambos') arr = arr.concat(((DAILY[d]?.entrou)||[]).map(it=>__tag(it,'entrou')));
+      if(sel==='saiu' || sel==='ambos') arr = arr.concat(((DAILY[d]?.saiu)||[]).map(it=>__tag(it,'saiu')));
+    });
+    arr.sort((x,y)=> (y.snapshot||'').localeCompare(x.snapshot||'') || ((y.preco||0)-(x.preco||0)));
+    return arr;
+  }
+  function getDataRef(){
+    try{ if (typeof DATA !== 'undefined' && Array.isArray(DATA)) return DATA; }catch(e){}
+    if (Array.isArray(window.DATA)) return window.DATA;
+    if (Array.isArray(window.__DATA_REF)) return window.__DATA_REF;
+    return null;
+  }
+  function ensureBackup(){
+    const ref = getDataRef();
+    if (ref && !Array.isArray(window.__DATA_ORIG)) window.__DATA_ORIG = ref.slice();
+    if (ref) window.__DATA_REF = ref;
+    return ref;
+  }
+  function applyIntervalAndRender(list){
+    const ref = ensureBackup();
+    if (!Array.isArray(ref)) return;
+    ref.splice(0, ref.length, ...list);
+    try{ window.__DATA_MODE = 'interval'; }catch(e){}
+        try{ if(typeof window.updateBairroOptions==='function') window.updateBairroOptions(); }catch(e){}
+if(window.state){ window.state.page = 1; }
+    if(countBadge){ countBadge.textContent = `${list.length} resultado${list.length===1?'':'s'}`; }
+    if(typeof window.render === 'function'){ window.render(); }
+    const dias = dates.filter(d=>d>=dtIni.value && d<=dtFim.value).length;
+    if(sum){ sum.textContent = `Dias no intervalo: ${dias} · Registros: ${list.length}`; }
+  }
+  function applySnapshotTotalAndRender(){
+    if (!Array.isArray(SNAPSHOT_TOTAL)) return;
+    applyIntervalAndRender(SNAPSHOT_TOTAL);
+    try{ window.__DATA_MODE = 'interval'; }catch(e){}
+    if(sum){ sum.textContent = `Total em divulgação no último dia`; }
+  }
+
+  function restoreAll(){
+    const ref = ensureBackup();
+    if (!Array.isArray(ref) || !Array.isArray(window.__DATA_ORIG)) return;
+    ref.splice(0, ref.length, ...window.__DATA_ORIG);
+        try{ if(typeof window.updateBairroOptions==='function') window.updateBairroOptions(); }catch(e){}
+if(window.state){ window.state.page = 1; }
+    if(countBadge){ countBadge.textContent = `${ref.length} resultado${ref.length===1?'':'s'}`; }
+    if(typeof window.render === 'function'){ window.render(); }
+    if(sum){ sum.textContent = `Modo intervalo: desligado`; }
+  }
+  // Auto refresh (sem "Aplicar")
+  let debounceTimer=null;
+  function scheduleUpdate(){
+    if(window.__MODE_TOTAL) return;
+    clearTimeout(debounceTimer);
+    debounceTimer=setTimeout(()=> applyIntervalAndRender(collectInterval()), 250);
+  }
+  dtIni.addEventListener('change', scheduleUpdate);
+  dtFim.addEventListener('change', scheduleUpdate);
+  if(movSel) movSel.addEventListener('change', scheduleUpdate);
+  // Presets
+  function todayStr(){
+    return BASE_TODAY;
+  }
+
+  function setQuickFilterActive(activeId){
+    const chips = [qHoje, qSemana, q7, q30, qMes];
+    chips.forEach(chip=>{
+      if(!chip) return;
+      const isActive = (chip.id === activeId);
+      chip.classList.toggle('active', !!isActive);
+      if(chip.id !== 'qHoje'){
+        if(isActive){
+          chip.classList.remove('ghost');
+        }else{
+          chip.classList.add('ghost');
+        }
+      }
+    });
+  }
+
+  qHoje.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive('qHoje');
+    const end = todayStr(); // BASE_TODAY (último dia disponível na base)
+    // Hoje = apenas o dia atual (D -> D)
+    const start = end;
+
+    dtIni.value = start;
+    dtFim.value = end;
+    applyIntervalAndRender(collectInterval());
+  };
+
+  qSemana.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive('qSemana');
+    const today = new Date(todayStr()+'T00:00:00');
+    // Normaliza para meia-noite local para evitar problemas de fuso horário
+    today.setHours(0,0,0,0);
+    const dow = today.getDay(); // 0=Dom,1=Seg,...6=Sab
+    const start = new Date(today);
+    // Calcula a segunda-feira da semana atual
+    const diff = (dow === 0 ? -6 : 1 - dow); // segunda da semana atual
+    start.setDate(today.getDate() + diff);
+    // Semana atual: da segunda até a data de hoje (ou domingo, se hoje for domingo)
+    const end = new Date(today);
+    dtIni.value = ymd(start);
+    dtFim.value = ymd(end);
+    applyIntervalAndRender(collectInterval());
+  };
+
+
+q7.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive('q7');
+    const end = new Date(todayStr()+'T00:00:00');
+    const start = new Date(end);
+    start.setDate(end.getDate() - 6);
+    dtIni.value = ymd(start);
+    dtFim.value = ymd(end);
+    applyIntervalAndRender(collectInterval());
+  };
+
+  q30.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive('q30');
+    // Últimos 30 dias com base no último dia disponível na base (inclusive)
+    const end = new Date(todayStr()+'T00:00:00');
+    end.setHours(0,0,0,0);
+    const start = new Date(end);
+    start.setDate(end.getDate() - 29);
+    dtIni.value = ymd(start);
+    dtFim.value = ymd(end);
+    applyIntervalAndRender(collectInterval());
+  };
+
+
+qMes.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive('qMes');
+    const today = new Date(todayStr()+'T00:00:00');
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    dtIni.value = ymd(first);
+    dtFim.value = ymd(today);
+    applyIntervalAndRender(collectInterval());
+  };
+
+  if(verTudo) verTudo.onclick = ()=>{
+    if(window.__MODE_TOTAL) return;
+    setQuickFilterActive(null);
+    restoreAll();
+  };
+
+  // Exporta inicialização para ser chamada depois que DATA + render() existirem
+  window.__INIT_INTERVAL = function(){
+    try{
+      if(window.__MODE_TOTAL) return;
+      if(qHoje && typeof qHoje.onclick === 'function'){
+        qHoje.onclick();
+      }else{
+        // fallback: aplica intervalo atual
+        applyIntervalAndRender(collectInterval());
+      }
+    }catch(e){}
+  };
+
+  // Expor helpers para outros scripts (compatibilidade com handlers legacy)
+  try{ window.setQuickFilterActive = setQuickFilterActive; }catch(e){}
+  try{ window.collectInterval = collectInterval; }catch(e){}
+  try{ window.applyIntervalAndRender = applyIntervalAndRender; }catch(e){}
+  try{ window.applySnapshotTotalAndRender = applySnapshotTotalAndRender; }catch(e){}
+  try{ window.restoreAll = restoreAll; }catch(e){}
+  try{ window.BASE_TODAY = BASE_TODAY; }catch(e){}
+  try{ window.dates = dates; }catch(e){}
+</script>
+
+<div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th class="nowrap">Tipo / Endereço</th>
+            <th class="nowrap">Útil</th>
+            <th class="nowrap">Total</th>
+            <th class="nowrap">Terreno</th>
+            
+            <th class="nowrap">Preço</th>
+            <th class="nowrap">Anunciante</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  
+  <div id="lightbox" class="lightbox" tabindex="-1" aria-label="Visualização da imagem">
+    <img alt="Imagem em tamanho maior"/>
+  </div>
+</main>
+</div>
+
+  <script type="application/x-unificador">
+// Base de dados principal: começa com o snapshot total do último dia gerado pelo Python
+let DATA = (function(){
+  try{
+    // default: HOJE + ENTROU (intervalo) — para abrir já com o filtro aplicado
+    const keys = (typeof DAILY === 'object' && DAILY) ? Object.keys(DAILY).sort() : [];
+    const last = keys.length ? keys[keys.length-1] : null;
+    const day = (last && DAILY && DAILY[last]) ? DAILY[last] : {};
+    const __tag = (it, mov)=>{ try{ if(it && (it.mov==null || it.mov==='')) it.mov = mov; }catch(e){} return it; };
+    const entrou = Array.isArray(day.entrou) ? day.entrou.map(it=>__tag(it,'entrou')) : [];
+    const saiu   = Array.isArray(day.saiu)   ? day.saiu.map(it=>__tag(it,'saiu'))     : [];
+    return entrou.concat(saiu);
+  }catch(e){
+    return [];
+  }
+})();
+window.DATA = DATA;
+
+// ===== Bairro: lista filtrável (combo) =====
+(function(){
+  function normKey(s){
+    s = String(s || '').trim();
+    try{ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+    catch(e){ return s.toUpperCase(); }
+  }
+  function closeMenu(){
+    const menu = document.getElementById('bairroMenu');
+    if(menu) menu.classList.remove('open');
+  }
+  function openMenu(){
+    const menu = document.getElementById('bairroMenu');
+    if(menu) menu.classList.add('open');
+  }
+  function renderMenu(){
+    const input = document.getElementById('bairro');
+    const menu  = document.getElementById('bairroMenu');
+    if(!input || !menu) return;
+    const all = window.__BAIRROS_ALL || [];
+    const q = normKey(input.value || '');
+    const filtered = q ? all.filter(v => normKey(v).startsWith(q)) : all;
+
+    menu.innerHTML = '';
+    const frag = document.createDocumentFragment();
+
+    if(filtered.length === 0){
+      const d = document.createElement('div');
+      d.className = 'combo-empty';
+      d.textContent = 'Nenhum bairro encontrado';
+      frag.appendChild(d);
+    }else{
+      filtered.slice(0, 400).forEach(v=>{
+        const o = document.createElement('div');
+        o.className = 'combo-option';
+        o.setAttribute('role','option');
+        o.textContent = v;
+        o.dataset.value = v;
+        o.addEventListener('pointerdown', (ev)=>{
+          ev.preventDefault();
+          input.value = v;
+          closeMenu();
+          // mantém o padrão: aplicar filtros via botão "Aplicar"
+        });
+        frag.appendChild(o);
+      });
+    }
+    menu.appendChild(frag);
+  }
+
+  window.updateBairroOptions = function(){
+    const input = document.getElementById('bairro');
+    const menu  = document.getElementById('bairroMenu');
+    const combo = document.getElementById('bairroCombo');
+    if(!input || !menu || !combo) return;
+
+    const cur = input.value || '';
+    const map = new Map();
+
+    try{
+      (window.DATA || []).forEach(it=>{
+        const raw = it && it.bairro!=null ? String(it.bairro).trim() : '';
+        if(!raw) return;
+        const key = normKey(raw);
+        if(!map.has(key)) map.set(key, raw);
+      });
+    }catch(e){}
+
+    const arr = Array.from(map.values()).sort((a,b)=> a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+    window.__BAIRROS_ALL = arr;
+
+    // se o usuário digitou sem acento e existe match exato, normaliza para o valor real
+    if(cur){
+      const k = normKey(cur);
+      const match = arr.find(v=> normKey(v) === k);
+      if(match) input.value = match;
+    }
+
+    renderMenu();
+  };
+
+  function initCombo(){
+    const input = document.getElementById('bairro');
+    const menu  = document.getElementById('bairroMenu');
+    const btn   = document.querySelector('#bairroCombo .combo-btn');
+    const combo = document.getElementById('bairroCombo');
+    
+    if(input && menu && btn && combo){
+      input.addEventListener('focus', ()=>{ openMenu(); renderMenu(); });
+      input.addEventListener('click', ()=>{ openMenu(); renderMenu(); });
+      input.addEventListener('input', ()=>{ openMenu(); renderMenu(); });
+    
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        if(menu.classList.contains('open')) closeMenu();
+        else { openMenu(); renderMenu(); input.focus(); }
+      });
+    
+      // Fecha ao clicar fora
+      document.addEventListener('click', (ev)=>{
+        if(combo.contains(ev.target)) return;
+        closeMenu();
+      });
+    
+      // ESC fecha
+      input.addEventListener('keydown', (ev)=>{
+        if(ev.key === 'Escape'){ closeMenu(); }
+      });
+    }
+    
+    try{ window.updateBairroOptions(); }catch(e){}
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initCombo, {once:true});
+  }else{
+    initCombo();
+  }
+})();
+
+let state = { filtro:{negociacao:'venda',q:'',min:'',max:'',tipo:'',quartos:'',suites:'',bwc:'',vagas:'',minUtil:'',minTotal:'',minTerreno:'',bairro:''}, page:1, pageSize:25, results:[] };
+state.filtro.mov = 'entrou';
+window.__MODE_TOTAL = false;
+try{ window.__DATA_MODE = 'interval'; }catch(e){}
+
+const fmtMoney = (v)=> v==null||v==='' ? '—' : Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtArea  = (v)=> v==null||isNaN(v) ? '—' : (Math.floor(Number(v))+' m²');
+const guard = (v)=> (v??'')+'';
+
+function matches(item){
+  const f = state.filtro;
+  if(f.mov){ if(item.mov==null) return false; if(String(item.mov||'').toLowerCase() !== f.mov) return false; }
+if(f.negociacao!=='todas' && item.negociacao!==f.negociacao) return false;
+  // --- Busca textual (pente fino) ---
+  const normSearch = (s)=>{
+    s = String(s ?? '');
+    try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }catch(e){}
+    s = s.toUpperCase();
+    // remove pontuação/duplicidades de espaço (melhor match em endereço/nomes/códigos)
+    s = s.replace(/[^0-9A-Z]+/g,' ').replace(/\s+/g,' ').trim();
+    return s;
+  };
+
+  const normalizeText = (s)=>{
+    s = String(s ?? '');
+    try{ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase(); }
+    catch(e){ return s.toUpperCase(); }
+  };
+
+  const qRaw = (f.q || '').trim();
+  if(qRaw){
+    const getBlob = (it)=>{
+      if(!it) return '';
+      try{ if(it.__search_blob != null) return it.__search_blob; }catch(e){}
+      const blob = normSearch([
+        it.titulo, it.endereco, it.bairro, it.cidade, it.uf,
+        it.anunciante, it.tipo, it.edificio,
+        it.cod_sub_any, it.cod_sub, it.cod, it.cod_anunc, it.ref, it.referencia,
+        it.url
+      ].map(guard).join(' '));
+      try{ it.__search_blob = blob; }catch(e){}
+      return blob;
+    };
+
+    // suporte: "frase exata", termos AND, e exclusão com -termo
+    const raw = qRaw;
+    const phrases = [];
+    raw.replace(/"([^"]+)"/g, function(_,p){ if(p && p.trim()) phrases.push(p.trim()); return ''; });
+
+    const stripped = raw.replace(/"[^"]*"/g, ' ');
+    const tokens = stripped.split(/\s+/).filter(Boolean);
+
+    const inc = [];
+    const exc = [];
+    for(let i=0;i<tokens.length;i++){
+      const t = tokens[i];
+      if(t && t[0]==='-' && t.length>1){ exc.push(t.slice(1)); }
+      else if(t){ inc.push(t); }
+    }
+
+    const blob = getBlob(item);
+
+    for(let i=0;i<phrases.length;i++){
+      const n = normSearch(phrases[i]);
+      if(n && blob.indexOf(n)===-1) return false;
+    }
+    for(let i=0;i<inc.length;i++){
+      const n = normSearch(inc[i]);
+      if(n && blob.indexOf(n)===-1) return false;
+    }
+    for(let i=0;i<exc.length;i++){
+      const n = normSearch(exc[i]);
+      if(n && blob.indexOf(n)!==-1) return false;
+    }
+  }
+
+const pMin = Number(String(f.min).replace(/\D/g,''))||null;
+  const pMax = Number(String(f.max).replace(/\D/g,''))||null;
+  if(pMin!=null && pMin>0 && Number(item.preco||0) < pMin) return false;
+  if(pMax!=null && pMax>0 && Number(item.preco||0) > pMax) return false;
+
+  if(f.tipo){
+    const tipoItem = String(item.tipo || '');
+    if(f.tipo === 'Terreno'){
+      if(tipoItem !== 'Terrenos' && tipoItem !== 'Terrenos Comerciais') return false;
+    }else{
+      if(tipoItem !== f.tipo) return false;
+    }
+  }
+  if(f.bairro){
+    const fb = normalizeText(f.bairro||'').trim();
+    if(fb){
+      if(!normalizeText(item.bairro||'').startsWith(fb)) return false;
+    }
+  }
+  if(f.quartos!=='' && Number(item.quartos||0) < Number(f.quartos)) return false;
+  if(f.suites!=='' && Number(item.suites||0) < Number(f.suites)) return false;
+  if(f.bwc!=='' && Number(item.bwc||0) < Number(f.bwc)) return false;
+  if(f.vagas!=='' && Number(item.vagas||0) < Number(f.vagas)) return false;
+  if(f.minUtil!=='' && Number(item.area_util||0) < Number(f.minUtil)) return false;
+  if(f.minTotal!=='' && Number(item.area_total||0) < Number(f.minTotal)) return false;
+  if(f.minTerreno!=='' && Number(item.area_terreno||0) < Number(f.minTerreno)) return false;
+  return true;
+}
+
+function render(){ const filtered = DATA.filter(matches); const sorted = applySort(filtered);
+  state.results = filtered;
+  const total = sorted.length;
+  const pageSize = state.pageSize;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  if(state.page > pages) state.page = pages;
+  const start = (state.page-1)*pageSize;
+  const end = start + pageSize;
+
+  document.getElementById('countBadge').textContent = `${total} resultado${total!==1?'s':''}`;
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = sorted.slice(start,end).map(rowTpl).join('');
+
+  resolveThumbs();
+
+  const pag = document.getElementById('pagination');
+  let buttons = '';
+  if(pages <= 8){ for(let i=1;i<=pages;i++){ buttons += `<button class="${i===state.page?'active':''}" data-page="${i}">${i}</button>`; } }
+  else{
+    const parts = new Set([1,2,pages-1,pages,state.page-1,state.page,state.page+1].filter(x=>x>=1 && x<=pages));
+    let last = 0;
+    [...parts].sort((a,b)=>a-b).forEach(i=>{ if(i-last>1) buttons += `<span class="muted">…</span>`; buttons += `<button class="${i===state.page?'active':''}" data-page="${i}">${i}</button>`; last=i; });
+  }
+  pag.innerHTML = `<div class="help">Página ${state.page} de ${pages}</div>
+    <button ${state.page===1?'disabled':''} data-jump="prev">Anterior</button>${buttons}
+    <button ${state.page===pages?'disabled':''} data-jump="next">Próxima</button>`;
+}
+
+function rowTpl(it){
+  const util = fmtArea(it.area_util);
+  const total = fmtArea(it.area_total);
+  const terr = fmtArea(it.area_terreno);
+  const preco = fmtMoney(it.preco);
+  const infoLinha = [it.bairro?`${it.bairro}`:'', it.cidade?` - ${it.cidade}`:''].join('');
+
+  const thumbAttr = it.thumb ? `src="${it.thumb}"` : `data-src-from="${it.url}" src=""`;
+  const mov = (it.mov||'').toLowerCase();
+  const movToken = (function(){ var tip = tipFor(it); return mov==='entrou' ? '<span class="token-mov entrou' + (tip? '" aria-label="'+escAttr(tip)+'"' : '"') + '>ENTROU</span>' : (mov==='saiu' ? '<span class="token-mov saiu' + (tip? '" aria-label="'+escAttr(tip)+'"' : '"') + '>SAIU</span>' : ''); })();
+const trClass = mov==='entrou' ? 'row-accent entrou' : (mov==='saiu' ? 'row-accent saiu' : '');
+
+  return `<tr>
+    <td>
+      <a class="link" href="${it.url}" target="_blank" title="Abrir anúncio">
+        <img class="thumb" ${thumbAttr} alt="thumb" />
+      </a>
+    </td>
+    <td class="title-col">
+      <h4>${(it.tipo||"").toUpperCase()} ${movToken}<span class="mov-meta" style="display:none" data-mov="${it.mov||''}" data-data-entrada="${it.data_entrada||it.dataEntrada||''}" data-data-saida="${it.data_saida||it.dataSaida||''}"></span></h4>
+      <div class="sub">${(it.edificio||"")}${(it.edificio&&it.endereco)?" — ":""}${guard(it.endereco)}</div>
+      <div class="badges">
+        <span class="chip chip-q">
+          <img class="chip-icon" src="https://sub100.com.br/_nuxt/img/dormitorios.a491a25.svg" alt="Dormitórios">
+          <span>${it.quartos||0}</span>
+        </span>
+        <span class="chip chip-s chip-suite">
+          <img class="chip-icon" src="https://i.ibb.co/wFzdNwD0/dormitorios-a491a25.png" alt="Suítes">
+          <span>${it.suites||0}</span>
+        </span>
+        <span class="chip chip-b">
+          <img class="chip-icon" src="https://sub100.com.br/_nuxt/img/banheiros.ce8125e.svg" alt="Banheiros">
+          <span>${it.bwc||0}</span>
+        </span>
+        <span class="chip chip-v">
+          <img class="chip-icon" src="https://sub100.com.br/_nuxt/img/garagens.6dffe8f.svg" alt="Vagas de garagem">
+          <span>${it.vagas||0}</span>
+        </span>
+      </div>
+    </td>
+    <td><span class="pill">${(it.area_util||it.area_util===0)? Math.round(it.area_util)+'m²': ''}</span></td>
+    <td><span class="pill">${(it.area_total||it.area_total===0)? Math.round(it.area_total)+'m²': ''}</span></td>
+    <td><span class="pill">${(it.area_terreno||it.area_terreno===0)? Math.round(it.area_terreno)+'m²': ''}</span></td>
+    <td class="price">${preco}</td>
+    <td>${guard(it.anunciante)||'—'}</td>
+    <td class="actions"><a class="btn-anuncio" href="${it.url}" target="_blank" rel="noopener" title="Anúncio">Anúncio</a><button type="button" class="btn-img" title="Imagem" aria-label="Imagem"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" role="img"><path fill="#0b0f14" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 2v9.586l-3.293-3.293a1 1 0 0 0-1.414 0L10 15.586l-1.293-1.293a1 1 0 0 0-1.414 0L5 15.586V5h14zM5 19v-1.586l2.293-2.293 4 4H5zm6.414 0-2-2L14 12.414 19 17v2h-7.586zM8 9a2 2 0 1 1 4 0a2 2 0 0 1-4 0z"/></svg></button></td>
+  </tr>`;
+}
+
+// Robust thumb resolver using reader proxy to avoid CORS
+async function fetchThroughReader(url){
+  // Try both https and http reader endpoints
+  const u = new URL(url, location.href);
+  const candidates = [
+    `https://r.jina.ai/http://${u.host}${u.pathname}${u.search}`,
+    `https://r.jina.ai/http://` + u.href.replace(/^https?:\/\//,'')
+  ];
+  for(const readerUrl of candidates){
+    try{
+      const r = await fetch(readerUrl, {mode:'cors'});
+      if(r.ok){
+        const text = await r.text();
+        if(text && text.length>100) return text;
+      }
+    }catch(e){}
+  }
+  return null;
+}
+
+async function resolveThumb(el){
+  // If already has src, keep it
+  if(el.getAttribute('src')) return;
+  const url = el.getAttribute('data-src-from');
+  if(!url) return;
+  let html = null;
+  try{
+    html = await fetchThroughReader(url);
+  }catch(e){}
+  let img = null;
+  if(html){
+    const og = html.match(/<meta[^>]+property=[\"']og:image[\"'][^>]*content=[\"']([^\"']+)[\"'][^>]*>/i);
+    if(og) img = og[1];
+    if(!img){
+      const m = html.match(/<img[^>]+src=[\"']([^\"']+)[\"'][^>]*>/i);
+      if(m) img = m[1];
+    }
+  }
+  if(img){
+    try{ el.src = new URL(img, url).href; }
+    catch(_){ el.src = img; }
+  }else{
+    el.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="128" height="96"><rect width="100%" height="100%" fill="#0c0f14"/></svg>');
+  }
+}
+function resolveThumbs(){ document.querySelectorAll('img[data-src-from]').forEach(resolveThumb); }
+
+document.getElementById('pageSize').addEventListener('change',(e)=>{ state.pageSize=Number(e.target.value)||25; state.page=1; 
+// ==== AUTORELOAD DE FILTROS ====
+function bindAutoRefresh(){
+  const setAndRender = ()=>{
+    // Copia a lógica do botão "Aplicar"
+    state.filtro.q = (document.getElementById('q') || document.getElementById('searchTop') || {}).value || '';
+    state.filtro.min = (document.getElementById('min')||{}).value || '';
+    state.filtro.max = (document.getElementById('max')||{}).value || '';
+    state.filtro.tipo = (document.getElementById('tipo')||{}).value || '';
+        state.filtro.bairro = (document.getElementById('bairro')||{}).value || '';
+state.filtro.quartos = (document.getElementById('qtdQuartos')||{}).value || '';
+    state.filtro.suites  = (document.getElementById('qtdSuites')||{}).value || '';
+    state.filtro.bwc     = (document.getElementById('qtdBwc')||{}).value || '';
+    state.filtro.vagas   = (document.getElementById('qtdVagas')||{}).value || '';
+    state.filtro.minUtil    = (document.getElementById('minUtil')||{}).value || '';
+    state.filtro.minTotal   = (document.getElementById('minTotal')||{}).value || '';
+    state.filtro.minTerreno = (document.getElementById('minTerreno')||{}).value || '';
+    state.page = 1;
+    render();
+  };
+
+  // Inputs e selects do sidebar
+  document.querySelectorAll('#sidebar input, #sidebar select').forEach(el=>{
+    const evt = (el.type==='number' || el.tagName==='SELECT') ? 'change' : 'input';
+    el.addEventListener(evt, setAndRender);
+  });
+
+  // Toggles de negociação (Vendas / Locação / Todas)
+  const negWrap = document.getElementById('negociacaoToggle');
+  if(negWrap){
+    negWrap.querySelectorAll('button[data-neg]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.filtro.negociacao = btn.getAttribute('data-neg') || 'todas';
+        state.page = 1;
+        render();
+      });
+    });
+  }
+}
+
+render(); });
+
+
+function __scrollToCabecalho(){
+  // Topo da página (scroll externo)
+  try{
+    if(typeof window.scrollTo === 'function'){
+      window.scrollTo({top:0, behavior:'smooth'});
+    }else{
+      window.scrollTo(0,0);
+    }
+  }catch(_){}
+  try{
+    const se = document.scrollingElement || document.documentElement || document.body;
+    if(se) se.scrollTop = 0;
+  }catch(_){}
+
+  // Topo da listagem (se existir scroll interno)
+  try{
+    const wrap = document.querySelector('.table-wrap');
+    if(wrap && wrap.scrollHeight > wrap.clientHeight + 1){
+      if(typeof wrap.scrollTo === 'function') wrap.scrollTo({top:0, behavior:'smooth'});
+      else wrap.scrollTop = 0;
+    }
+  }catch(_){}
+
+  // Garante que a barra superior (toolbar) fique visível no topo
+  try{
+    const tb = document.querySelector('.toolbar');
+    if(tb && typeof tb.scrollIntoView === 'function'){
+      tb.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  }catch(_){}
+}
+
+document.getElementById('pagination').addEventListener('click',(e)=>{
+  const btn=e.target.closest('button,[data-page],[data-jump]'); if(!btn) return;
+  if(btn.dataset.page){ state.page=Number(btn.dataset.page); }
+  else if(btn.dataset.jump==='prev'){ state.page=Math.max(1,state.page-1); }
+  else if(btn.dataset.jump==='next'){ const pages=Math.ceil(state.results.length/state.pageSize)||1; state.page=Math.min(pages,state.page+1); }
+  render();
+  __scrollToCabecalho();
+  });
+document.getElementById('aplicar').addEventListener('click',()=>{
+  const getv = (id)=> (document.getElementById(id)||{}).value || '';
+  const __st = document.getElementById('searchTop');
+  const __q  = document.getElementById('q');
+  state.filtro.q = ((__st && __st.value!=null) ? __st.value : ((__q && __q.value!=null) ? __q.value : ''));
+  state.filtro.min = getv('min');
+  state.filtro.max = getv('max');
+  state.filtro.tipo = getv('tipo');
+    state.filtro.bairro = getv('bairro');
+state.filtro.quartos = getv('qtdQuartos');
+  state.filtro.suites  = getv('qtdSuites');
+  state.filtro.bwc     = getv('qtdBwc');
+  state.filtro.vagas   = getv('qtdVagas');
+  state.filtro.minUtil    = getv('minUtil');
+  state.filtro.minTotal   = getv('minTotal');
+  state.filtro.minTerreno = getv('minTerreno');
+  state.page=1; render();
+});
+document.getElementById('limpar').addEventListener('click',()=>{
+  const __st = document.getElementById('searchTop'); if(__st) __st.value='';
+  const __qEl = document.getElementById('q'); if(__qEl) __qEl.value='';
+  document.querySelectorAll('#sidebar input, #sidebar select').forEach(el=>{ if(el.type==='number'||el.type==='text') el.value=''; if(el.tagName==='SELECT') el.selectedIndex=0; });
+  document.querySelectorAll('#negociacaoToggle button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#negociacaoToggle [data-neg="todas"]').classList.add('active');
+  state.filtro={...state.filtro, negociacao:'todas', q:'', min:'', max:'', tipo:'', bairro:'', quartos:'', suites:'', bwc:'', vagas:'', minUtil:'', minTotal:'', minTerreno:''};
+  state.page=1; render();
+});
+document.getElementById('searchTop').addEventListener('input', (e)=>{ 
+  const v = (e && e.target) ? e.target.value : '';
+  state.filtro.q = v;
+  const qEl = document.getElementById('q');
+  if(qEl && qEl.value !== v) qEl.value = v;
+  state.page = 1; render();
+});
+document.getElementById('searchTop').addEventListener('keyup', (e)=>{ 
+  const v = (e && e.target) ? e.target.value : '';
+  state.filtro.q = v;
+  const qEl = document.getElementById('q');
+  if(qEl && qEl.value !== v) qEl.value = v;
+  state.page = 1; render();
+});
+document.getElementById('negociacaoToggle').addEventListener('click',(e)=>{
+  const btn=e.target.closest('button,[data-page],[data-jump]'); if(!btn) return;
+  document.querySelectorAll('#negociacaoToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); state.filtro.negociacao=btn.dataset.neg; state.page=1; render();
+});
+
+/* INIT: Entrou > Venda > Hoje (carrega imoveis do ultimo dia disponivel) */
+try{
+  state.filtro.negociacao = 'venda';
+  state.filtro.mov = 'entrou';
+window.__MODE_TOTAL = false;
+try{ window.__DATA_MODE = 'interval'; }catch(e){}
+  // UI coerente
+  (function(){
+    var neg = document.getElementById('negociacaoToggle');
+    if(neg){
+      neg.querySelectorAll('button[data-neg]').forEach(function(b){
+        b.classList.toggle('active', (b.getAttribute('data-neg')||'')==='venda');
+      });
+    }
+    var mov = document.getElementById('movToggle');
+    if(mov){
+      mov.querySelectorAll('button[data-mov]').forEach(function(b){
+        b.classList.toggle('active', (b.getAttribute('data-mov')||'')==='entrou');
+      });
+    }
+  })();
+}catch(e){}
+
+try{
+  if(typeof window.__INIT_INTERVAL==='function') window.__INIT_INTERVAL();
+  else render();
+}catch(e){ try{ render(); }catch(_){} }
+// ==== LIGHTBOX (popup de imagem) ====
+const __lb = document.getElementById('lightbox');
+const __lbImg = __lb ? __lb.querySelector('img') : null;
+function openLightbox(src){
+  if(!__lb || !__lbImg || !src) return;
+  __lbImg.src = src;
+  __lb.classList.add('open');
+  __lb.focus();
+}
+function closeLightbox(){
+  if(!__lb) return;
+  __lb.classList.remove('open');
+}
+if(__lb){
+  __lb.addEventListener('click', (e)=>{ if(e.target===__lb) closeLightbox(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeLightbox(); });
+}
+// Delegação: clique no thumb abre popup (sem sair do sistema)
+document.addEventListener('click', (e)=>{
+  const a = e.target.closest('a');
+  if(!a) return;
+  const img = a.querySelector('img.thumb');
+  if(!img) return;
+  e.preventDefault();
+  openLightbox(img.getAttribute('src') || '');
+});
+// --- Share helper ---
+async function shareListing(url){
+  try{
+    if(navigator.share){ await navigator.share({title:'Imóvel', url}); return; }
+  }catch(e){}
+  try{
+    if(navigator.clipboard && url){ await navigator.clipboard.writeText(url); alert('URL copiada para a área de transferência.'); return; }
+  }catch(e){}
+  if(url) window.open(url,'_blank');
+}
+
+</script>
+
+  <script type="application/x-unificador">
+(function(){
+  const toggle = document.getElementById('toggleSidebar');
+  if(toggle){
+    toggle.addEventListener('click', ()=>{
+      const collapsed = /* removed toggle */ false;
+      toggle.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    });
+  }
+  // Auto-refresh dos filtros do sidebar
+  function debounce(fn, ms){ let t=null; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); }; }
+  const run = debounce(()=>{
+    try{
+      const g = (id)=> (document.getElementById(id)||{}).value || '';
+      state.filtro.q        = g('q');
+      state.filtro.min      = g('min');
+      state.filtro.max      = g('max');
+      state.filtro.tipo     = g('tipo');
+            state.filtro.bairro   = g('bairro');
+state.filtro.quartos  = g('qtdQuartos');
+      state.filtro.suites   = g('qtdSuites');
+      state.filtro.bwc      = g('qtdBwc');
+      state.filtro.vagas    = g('qtdVagas');
+      state.filtro.minUtil  = g('minUtil');
+      state.filtro.minTotal = g('minTotal');
+      state.filtro.minTerreno = g('minTerreno');
+      state.page = 1;
+      if(typeof render==='function') render();
+    }catch(e){}
+  }, 250);
+  function attachPriceMask(id){
+    const input = document.getElementById(id);
+    if(!input) return;
+    input.addEventListener('input', (e)=>{
+      const digits = (input.value||'').replace(/\D/g,'');
+      if(!digits){
+        input.value = '';
+        run();
+        return;
+      }
+      const value = Number(digits);
+      if(!isFinite(value)) return;
+      input.value = value.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+      run();
+    });
+    input.addEventListener('blur', ()=>{
+      const digits = (input.value||'').replace(/\D/g,'');
+      if(!digits){
+        input.value = '';
+        return;
+      }
+      const value = Number(digits);
+      if(!isFinite(value)) return;
+      input.value = value.toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+    });
+  }
+  attachPriceMask('min');
+  attachPriceMask('max');
+  document.querySelectorAll('#sidebar input, #sidebar select').forEach(el=>{
+    const evt = (el.type==='number' || el.tagName==='SELECT') ? 'change' : 'input';
+    el.addEventListener(evt, run);
+  });
+  const negWrap = document.getElementById('negociacaoToggle');
+  if(negWrap){
+    negWrap.addEventListener('click', (ev)=>{
+      const btn = ev.target.closest('button[data-neg]'); if(!btn) return;
+      state.filtro.negociacao = btn.dataset.neg || 'todas';
+      document.querySelectorAll('#negociacaoToggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.page = 1; if(typeof render==='function') render();
+    });
+  }
+  const movWrap = document.getElementById('movToggle');
+  if(movWrap){
+    // Movimento é "radio": sempre 1 selecionado (Entrou / Saiu / Total)
+    window.__MODE_TOTAL = false;
+
+    const buttons = () => [...movWrap.querySelectorAll('button[data-mov]')];
+    const setActive = (sel) => {
+      buttons().forEach(b => b.classList.toggle('active', (b.dataset.mov||'') === sel));
+    };
+
+    const lockQuickFiltersForTotal = () => {
+      // Travar filtros rápidos em HOJE (usando o último dia disponível na base)
+      try{
+        if(Array.isArray(dates) && dates.length){
+          const last = dates[dates.length-1];
+          dtIni.value = last;
+          dtFim.value = last;
+        }
+        if(typeof setQuickFilterActive === 'function'){
+          setQuickFilterActive('qHoje');
+        }
+      }catch(e){}
+      // Desabilita outros filtros rápidos enquanto TOTAL estiver ativo
+      ['qSemana','q7','q30','qMes','verTudo'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.disabled = true;
+      });
+      const hoje = document.getElementById('qHoje');
+      if(hoje) hoje.disabled = false;
+    };
+
+    const unlockQuickFilters = () => {
+      ['qHoje','qSemana','q7','q30','qMes','verTudo'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.disabled = false;
+      });
+    };
+
+    const applyMov = (sel) => {
+      sel = (sel||'entrou').toLowerCase();
+
+      if(sel === 'total'){
+        // Entra em TOTAL (não alterna/desliga ao clicar novamente)
+        window.__MODE_TOTAL = false;
+        state.filtro.mov = '';          // sem filtro de mov no TOTAL
+        setActive('total');
+        lockQuickFiltersForTotal();
+        if(typeof applySnapshotTotalAndRender === 'function'){
+          applySnapshotTotalAndRender();
+          return;
+        }
+        if(typeof render==='function') render();
+        return;
+      }
+
+      // Entrou / Saiu
+      if(window.__MODE_TOTAL && typeof restoreAll === 'function'){
+        // Sai de TOTAL e volta para o modo intervalo
+        window.__MODE_TOTAL = false;
+        unlockQuickFilters();
+        restoreAll();
+      } else {
+        window.__MODE_TOTAL = false;
+      }
+
+      // Radio: não permite "desselecionar" (sempre fica um)
+      state.filtro.mov = sel;
+      setActive(sel);
+      state.page = 1;
+      if(typeof render==='function') render();
+    };
+
+    // Inicializa estado conforme botão ativo no HTML (ou entra em "entrou")
+    (function initMov(){
+      const activeBtn = movWrap.querySelector('button[data-mov].active') || movWrap.querySelector('button[data-mov="entrou"]');
+      const sel = (activeBtn && activeBtn.dataset && activeBtn.dataset.mov) ? activeBtn.dataset.mov : 'entrou';
+      applyMov(sel);
+    })();
+
+    movWrap.addEventListener('click', (ev)=>{
+      const btn = ev.target.closest('button[data-mov]'); if(!btn) return;
+      const sel = (btn.dataset.mov||'entrou').toLowerCase();
+      // Se clicar no já selecionado: não faz toggle off
+      if(sel !== 'total' && state.filtro.mov === sel && !window.__MODE_TOTAL) return;
+      if(sel === 'total' && window.__MODE_TOTAL) return;
+      applyMov(sel);
+    });
+  }
+})();
+</script>
+
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" hidden>
+  <div class="lightbox-backdrop"></div>
+  <div class="lightbox-content">
+    <button class="lightbox-close" aria-label="Fechar">×</button>
+    <img id="lightbox-img" alt="Pré-visualização do imóvel">
+  </div>
+</div>
+
+
+
+
+  <script type="application/x-unificador" data-id="gallery-carousel-script">
+(function(){
+  // ===== CSS (max viewport, no extra bottom space) ===========================
+  (function ensureCSS(){
+    if(document.getElementById('gallery-carousel-styles-v2')) return;
+    const st=document.createElement('style'); st.id='gallery-carousel-styles-v2';
+    st.textContent = `
+    .gallery-overlay{ position:fixed; inset:0; display:none; z-index:10000; }
+    .gallery-overlay.open{ display:block; }
+    .gallery-backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.6); backdrop-filter:saturate(120%) blur(1px); }
+    .gallery-window{ position:absolute; inset:2vh 2vw; background:#0b0f14; border:1px solid #253144; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.5); overflow:hidden; }
+    .gallery-close{ position:absolute; top:10px; right:12px; border:none; background:#121a24; color:#e5e7eb; border:1px solid #253144; border-radius:10px; padding:6px 10px; cursor:pointer; z-index:3;  font-size:32px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; padding:8px 12px; }
+
+    /* Carousel fills 100% of the window (no spare vertical space) */
+    .gallery-carousel{ position:absolute; inset:0; }
+    .gallery-carousel .slides{ position:absolute; inset:0; }
+    .gallery-carousel .slide{ position:absolute; inset:0; display:none; }
+    .gallery-carousel .slide.active{ display:block; }
+    .gallery-carousel .slide img{ width:100%; height:100%; object-fit:contain; background:#0a0f1a; display:block; }
+    .gallery-carousel .nav{ position:absolute; top:50%; transform: translateY(-50%); border:none; background:rgba(0,0,0,.35); color:#fff; width:44px; height:44px; border-radius:999px; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2;  width:56px; height:56px; font-size:36px; border-radius:12px; }
+
+    .gallery-carousel .nav:hover{ background:rgba(0,0,0,.5); }
+    .gallery-carousel .nav.prev{ left:10px; }
+    .gallery-carousel .nav.next{ right:10px; }
+    .gallery-carousel .dots{ position:absolute; left:0; right:0; bottom:10px; display:flex; gap:6px; justify-content:center; z-index:2; }
+    .gallery-carousel .dot{ width:8px; height:8px; border-radius:50%; background:#6b7280; opacity:.7; }
+    .gallery-carousel .dot.active{ background:#fff; opacity:1; }
+    @media (max-width: 900px){
+      .gallery-window{ inset:1.5vh 1.5vw; border-radius:12px; }
+      .gallery-carousel .nav{ width:38px; height:38px; font-size:24px; }
+    }
+    .gallery-carousel .counter{ position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:12px; color:#fff; text-shadow:0 0 4px rgba(0,0,0,.8); z-index:2; font-family:inherit; }
+    .gallery-carousel .counter .current{ font-weight:600; }
+    .gallery-carousel .counter .total{ opacity:.85; }
+`;
+    document.head.appendChild(st);
+  })();
+
+  // ===== Helpers =============================================================
+  function isImgURL(u){ return typeof u === 'string' && /\.(jpe?g|png|webp|gif)(\?.*)?$/i.test(u.trim()); }
+  function deriveFromAlpha(src){
+    const out=[];
+    const m = (src||'').match(/(.*)([a-h])(\.(?:jpe?g|png|webp|gif)(?:\?.*)?)$/i);
+    if(!m) return out; const pre=m[1], suf=m[3];
+    for(const ch of "abcdefgh"){ out.push(pre+ch+suf); }
+    return out;
+  }
+  function extractGallery(it){
+    const urls=[]; const push = u=>{ if(isImgURL(u) && !urls.includes(u)) urls.push(u); };
+    if(it && it.thumb) push(it.thumb);
+    if(it && Array.isArray(it.fotos)){ it.fotos.forEach(push); }
+    if(urls.length<=1 && urls[0]) deriveFromAlpha(urls[0]).forEach(push);
+    return urls;
+  }
+
+  // ===== Build overlay once ==================================================
+  function ensureOverlay(){
+    if(document.getElementById('galleryOverlay')) return;
+    const wrap=document.createElement('div'); wrap.id='galleryOverlay'; wrap.className='gallery-overlay'; wrap.setAttribute('hidden','');
+    wrap.innerHTML = '<div class="gallery-backdrop" data-gallery-close></div>\
+      <div class="gallery-window">\
+        <button class="gallery-close" type="button" data-gallery-close aria-label="Fechar">×</button>\
+        <div class="gallery-carousel" data-idx="0">\
+          <div class="slides"></div>\
+          <button class="nav prev" type="button" aria-label="Anterior">‹</button>\
+          <button class="nav next" type="button" aria-label="Próxima">›</button>\
+          <div class="counter"><span class="current">1</span>/<span class="total">1</span></div>\
+        </div>\
+      </div>';
+    document.body.appendChild(wrap);
+  }
+
+  // ===== Runtime (no sliding animation, "seca") ==============================
+  const state = { idx:0, urls:[] };
+    function show(i){
+    const overlay=document.getElementById('galleryOverlay');
+    if(!overlay) return;
+    const slides=overlay.querySelector('.slides');
+    const N = slides ? slides.children.length : 0;
+    if(!N) return;
+    state.idx = (i+N)%N;
+    for(let n=0;n<N;n++){
+      const slide = slides.children[n];
+      if(n===state.idx){
+        slide.classList.add('active');
+        const im = slide.querySelector('img');
+        if(im && im.dataset.src){ im.src = im.dataset.src; delete im.dataset.src; }
+      }else{
+        slide.classList.remove('active');
+      }
+    }
+    const counter = overlay.querySelector('.counter');
+    if(counter){
+      const curEl = counter.querySelector('.current');
+      const totEl = counter.querySelector('.total');
+      if(curEl) curEl.textContent = String(state.idx+1);
+      if(totEl) totEl.textContent = String(N);
+    }
+  }
+    function openGallery(urls){
+    ensureOverlay();
+    const overlay=document.getElementById('galleryOverlay');
+    const slides=overlay.querySelector('.slides');
+    slides.innerHTML='';
+    state.urls = (urls||[]).slice();
+    state.urls.forEach((u,i)=>{
+      const s=document.createElement('div'); s.className='slide' + (i===0?' active':'');
+      const im=document.createElement('img'); if(i===0) im.src=u; else im.dataset.src=u; s.appendChild(im);
+      slides.appendChild(s);
+    });
+    const counter = overlay.querySelector('.counter');
+    const total = state.urls.length;
+    if(counter){
+      const curEl = counter.querySelector('.current');
+      const totEl = counter.querySelector('.total');
+      if(totEl) totEl.textContent = String(total);
+      if(curEl) curEl.textContent = total ? '1' : '0';
+    }
+    overlay.classList.add('open'); overlay.removeAttribute('hidden');
+    show(0);
+    overlay.querySelector('.nav.next').onclick = ()=> show(state.idx+1);
+    overlay.querySelector('.nav.prev').onclick = ()=> show(state.idx-1);
+
+    // [Single-style] Clique/toque na imagem da galeria: avançar (captura) e bloquear handlers externos
+    (function(){
+      try{
+        const overlay=document.getElementById('galleryOverlay');
+        const slides=overlay?.querySelector('.slides');
+        if(!slides) return;
+        function next(){ try{ show(state.idx+1); }catch(_e){} }
+        function consume(ev){ ev.preventDefault && ev.preventDefault(); ev.stopPropagation && ev.stopPropagation(); ev.stopImmediatePropagation && ev.stopImmediatePropagation(); }
+        const handler = function(ev){ if(ev && ev.target && ev.target.tagName==='IMG'){ consume(ev); next(); } };
+        slides.addEventListener('click', handler, true);
+        slides.addEventListener('pointerdown', handler, true);
+        slides.addEventListener('touchstart', handler, true);
+      }catch(_e){}
+    })();
+
+    overlay.addEventListener('click', function(ev){
+      if(ev.target && (ev.target.hasAttribute('data-gallery-close') || ev.target.classList.contains('gallery-backdrop'))){
+        overlay.classList.remove('open'); overlay.setAttribute('hidden','');
+        slides.innerHTML='';
+      }
+    });
+    document.addEventListener('keydown', function(ev){
+      if(!overlay.classList.contains('open')) return;
+      if(ev.key==='Escape'){ overlay.classList.remove('open'); overlay.setAttribute('hidden',''); slides.innerHTML=''; }
+      else if(ev.key==='ArrowRight'){ show(state.idx+1); }
+      else if(ev.key==='ArrowLeft'){ show(state.idx-1); }
+    });
+  }
+
+  
+
+  // ===== Download ZIP of photos (btn-img) ==================================
+  (function ensureDlCSS(){
+    if(document.getElementById('dl-zip-styles-v1')) return;
+    const st=document.createElement('style'); st.id='dl-zip-styles-v1';
+    st.textContent = `
+    .dl-overlay{position:fixed;inset:0;display:none;z-index:11000;font-family:inherit;}
+    .dl-overlay.open{display:block;}
+    .dl-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.58);backdrop-filter:saturate(120%) blur(1px);}
+    .dl-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,92vw);background:#0b0f14;border:1px solid #253144;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.55);padding:14px 14px 12px;}
+    .dl-title{font-weight:800;font-size:14px;margin:0 0 6px;}
+    .dl-sub{font-size:12px;opacity:.86;margin:0 0 10px;}
+    .dl-bar{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.08);}
+    .dl-bar > div{height:100%;width:0%;background:#22c55e;transition:width .12s ease;}
+    .dl-meta{display:flex;gap:8px;justify-content:space-between;margin-top:10px;font-size:12px;opacity:.9;}
+    .dl-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;}
+    .dl-actions button,.dl-actions a{border:1px solid rgba(255,255,255,.12);background:#121a24;color:#e5e7eb;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;text-decoration:none;}
+    .dl-actions a{background:#22c55e;color:#0b0f14;border:1px solid rgba(0,0,0,.1);}
+    .dl-actions a.disabled{opacity:.45;pointer-events:none;}
+    .dl-actions button:hover{filter:brightness(1.05);} .dl-actions a:hover{filter:brightness(1.03);}
+    `;
+    document.head.appendChild(st);
+  })();
+
+  function __dl_ensureOverlay(){
+    let ov=document.getElementById('dlZipOverlay');
+    if(ov) return ov;
+    ov=document.createElement('div');
+    ov.id='dlZipOverlay';
+    ov.className='dl-overlay';
+    ov.innerHTML = `
+      <div class="dl-backdrop" data-dl-close></div>
+      <div class="dl-card" role="dialog" aria-modal="true">
+        <div class="dl-title">Baixar fotos do imóvel</div>
+        <div class="dl-sub" id="dlSub">Preparando…</div>
+        <div class="dl-bar"><div id="dlBar"></div></div>
+        <div class="dl-meta"><span id="dlCount">0/0</span><span id="dlOk">0 ok</span></div>
+        <div class="dl-actions">
+          <button type="button" id="dlCancel">Cancelar</button>
+          <button type="button" id="dlLoose">Baixar soltas</button>
+          <button type="button" id="dlZip">Gerar ZIP</button>
+          <a id="dlDownload" class="disabled" href="#" download style="display:none">Baixar ZIP</a>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    return ov;
+  }
+
+  function __dl_sanitizeName(s){
+    return String(s||'imovel')
+      .replace(/\s+/g,'_')
+      .replace(/[^a-zA-Z0-9_\.\-]+/g,'_')
+      .replace(/_+/g,'_')
+      .replace(/^_+|_+$/g,'')
+      .slice(0,80) || 'imovel';
+  }
+
+  function __dl_guessExt(u){
+    const m = String(u||'').match(/\.(jpe?g|png|webp|gif)(?=\?|$)/i);
+    return m ? ('.'+m[1].toLowerCase().replace('jpeg','jpg')) : '.jpg';
+  }
+
+  function __dl_getCode(it, href){
+    const cand = [
+      it && (it.cod_sub_any||it.cod_sub||it.codigo||it.cod||it.ref_sub_any||it.ref_sub100||it.ref||it.id||it.ID),
+      href
+    ].filter(Boolean);
+    for(const c of cand){
+      const m = String(c).match(/\b\d{5}\.\d{3}\b/);
+      if(m) return m[0];
+    }
+    return __dl_sanitizeName((it && (it.titulo||it.title||it.tipo)) || 'imovel');
+  }
+
+  // ---------- ZIP (store) builder (sem libs) --------------------------------
+  function __dl_crc32(buf){
+    let table = __dl_crc32.table;
+    if(!table){
+      table = new Uint32Array(256);
+      for(let i=0;i<256;i++){
+        let c=i;
+        for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+        table[i]=c>>>0;
+      }
+      __dl_crc32.table=table;
+    }
+    let crc=0xFFFFFFFF;
+    for(let i=0;i<buf.length;i++) crc = table[(crc ^ buf[i]) & 0xFF] ^ (crc>>>8);
+    return (crc ^ 0xFFFFFFFF)>>>0;
+  }
+  function __dl_dosDT(date){
+    date = date || new Date();
+    let year = date.getFullYear();
+    if(year < 1980) year = 1980;
+    const dosTime = (date.getHours()<<11) | (date.getMinutes()<<5) | ((date.getSeconds()/2)|0);
+    const dosDate = ((year-1980)<<9) | ((date.getMonth()+1)<<5) | date.getDate();
+    return {dosTime, dosDate};
+  }
+  function __dl_u16(n){ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; }
+  function __dl_u32(n){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n,true); return b; }
+  function __dl_concat(arrs){
+    let len=0; for(const a of arrs) len += a.length;
+    const out=new Uint8Array(len); let off=0;
+    for(const a of arrs){ out.set(a,off); off += a.length; }
+    return out;
+  }
+  function __dl_makeZipStore(files){
+    const now = __dl_dosDT(new Date());
+    let localParts=[];
+    let centralParts=[];
+    let offset=0;
+    const enc = new TextEncoder();
+
+    for(const f of files){
+      const nameBytes = enc.encode(f.name);
+      const data = f.data;
+      const crc = __dl_crc32(data);
+      const size = data.length;
+
+      const localHeader = __dl_concat([
+        __dl_u32(0x04034b50),
+        __dl_u16(20),
+        __dl_u16(0),
+        __dl_u16(0),
+        __dl_u16(now.dosTime),
+        __dl_u16(now.dosDate),
+        __dl_u32(crc),
+        __dl_u32(size),
+        __dl_u32(size),
+        __dl_u16(nameBytes.length),
+        __dl_u16(0),
+        nameBytes
+      ]);
+      localParts.push(localHeader);
+      localParts.push(data);
+
+      const centralHeader = __dl_concat([
+        __dl_u32(0x02014b50),
+        __dl_u16(20),
+        __dl_u16(20),
+        __dl_u16(0),
+        __dl_u16(0),
+        __dl_u16(now.dosTime),
+        __dl_u16(now.dosDate),
+        __dl_u32(crc),
+        __dl_u32(size),
+        __dl_u32(size),
+        __dl_u16(nameBytes.length),
+        __dl_u16(0),
+        __dl_u16(0),
+        __dl_u16(0),
+        __dl_u16(0),
+        __dl_u32(0),
+        __dl_u32(offset),
+        nameBytes
+      ]);
+      centralParts.push(centralHeader);
+
+      offset += localHeader.length + data.length;
+    }
+
+    const centralDir = __dl_concat(centralParts);
+    const centralOffset = offset;
+    const centralSize = centralDir.length;
+
+    const end = __dl_concat([
+      __dl_u32(0x06054b50),
+      __dl_u16(0),__dl_u16(0),
+      __dl_u16(files.length),
+      __dl_u16(files.length),
+      __dl_u32(centralSize),
+      __dl_u32(centralOffset),
+      __dl_u16(0)
+    ]);
+
+    return __dl_concat([...localParts, centralDir, end]);
+  }
+
+  async function __dl_fetchBytes(url, signal){
+    const r = await fetch(url, {mode:'cors', signal: signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const ab = await r.arrayBuffer();
+    return new Uint8Array(ab);
+  }
+
+  async function __dl_buildZip(it, urls, href){
+    const overlay = __dl_ensureOverlay();
+    const sub = overlay.querySelector('#dlSub');
+    const bar = overlay.querySelector('#dlBar');
+    const count = overlay.querySelector('#dlCount');
+    const okEl = overlay.querySelector('#dlOk');
+    const dl = overlay.querySelector('#dlDownload');
+    const cancel = overlay.querySelector('#dlCancel');
+    const zipBtn = overlay.querySelector('#dlZip');
+    const looseBtn = overlay.querySelector('#dlLoose');
+
+    const code = __dl_sanitizeName(__dl_getCode(it, href));
+    const uniq=[]; (urls||[]).forEach(u=>{ u=String(u||'').trim(); if(u && !uniq.includes(u)) uniq.push(u); });
+    const list = uniq.slice(0, 40); // hard cap
+
+    overlay.classList.add('open');
+    let aborted=false;
+    const ac = new AbortController();
+
+    function close(){
+      try{ overlay.classList.remove('open'); }catch(_e){}
+      try{ if(overlay.__dl_blob_url){ URL.revokeObjectURL(overlay.__dl_blob_url); overlay.__dl_blob_url=null; } }catch(_e){}
+      try{ dl.classList.add('disabled'); dl.removeAttribute('href'); dl.style.display='none'; }catch(_e){}
+      try{ sub.textContent=''; bar.style.width='0%'; count.textContent='0/0'; okEl.textContent='0 ok'; }catch(_e){}
+    }
+
+    function onCloseClick(ev){
+      if(ev && (ev.target && (ev.target.hasAttribute('data-dl-close') || ev.target.id==='dlCancel'))){
+        aborted=true;
+        try{ ac.abort(); }catch(_e){}
+        close();
+      }
+    }
+
+    overlay.onclick = onCloseClick;
+    cancel.onclick = function(){ onCloseClick({target: cancel}); };
+
+    dl.onclick = function(ev){
+      // fecha após iniciar o download
+      setTimeout(close, 250);
+    };
+
+    // estado: modo ZIP
+    try{ if(zipBtn) zipBtn.style.display='none'; if(looseBtn) looseBtn.style.display='none'; }catch(_e){}
+    try{ dl.style.display='none'; }catch(_e){}
+
+    sub.textContent = 'Baixando fotos…';
+    count.textContent = `0/${list.length}`;
+    okEl.textContent = '0 ok';
+    bar.style.width = '0%';
+    dl.classList.add('disabled');
+    try{ dl.style.display='none'; }catch(_e){}
+
+    let done=0, ok=0;
+    const files = new Array(list.length);
+
+    // workers (moderado)
+    let next=0;
+    const W = Math.min(4, list.length||1);
+    async function worker(){
+      while(true){
+        const i = next++;
+        if(i>=list.length) break;
+        const u = list[i];
+        try{
+          const bytes = await __dl_fetchBytes(u, ac.signal);
+          const ext = __dl_guessExt(u);
+          const name = `${code}_${String(i+1).padStart(2,'0')}${ext}`;
+          files[i] = {name, data: bytes};
+          ok++;
+        }catch(_e){ /* skip */ }
+        done++;
+        const pct = list.length ? Math.round((done/list.length)*100) : 0;
+        bar.style.width = pct + '%';
+        count.textContent = `${done}/${list.length}`;
+        okEl.textContent = `${ok} ok`;
+        if(aborted) break;
+      }
+    }
+
+    await Promise.all(Array.from({length:W}, worker));
+
+    if(aborted) return;
+
+    const usable = files.filter(Boolean);
+    if(!usable.length){
+      sub.textContent = 'Não consegui baixar as fotos (bloqueio de CORS/404).';
+      return;
+    }
+
+    sub.textContent = 'Gerando ZIP…';
+    // ordenar pelo nome para ficar estável
+    usable.sort((a,b)=>a.name.localeCompare(b.name));
+    const zipBytes = __dl_makeZipStore(usable);
+    const blob = new Blob([zipBytes], {type:'application/zip'});
+    const url = URL.createObjectURL(blob);
+    overlay.__dl_blob_url = url;
+
+    dl.href = url;
+    dl.download = `${code}_fotos.zip`;
+    dl.classList.remove('disabled');
+    try{ dl.style.display=''; }catch(_e){}
+    sub.textContent = `ZIP pronto (${usable.length} foto(s)). Clique em “Baixar ZIP”.`;
+  }
+
+  
+
+  function __dl_triggerBlobDownload(bytes, filename){
+    try{
+      const blob = new Blob([bytes], {type:'application/octet-stream'});
+      const u = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = u;
+      a.download = filename;
+      a.style.display='none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>{ try{ URL.revokeObjectURL(u); }catch(_e){} }, 4000);
+      return true;
+    }catch(_e){ return false; }
+  }
+
+  function __dl_triggerDirect(url, filename){
+    try{
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      // download pode ser ignorado em cross-origin, mas tentamos.
+      a.download = filename;
+      a.style.display='none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return true;
+    }catch(_e){ return false; }
+  }
+
+  async function __dl_buildLoose(it, urls, href){
+    const overlay = __dl_ensureOverlay();
+    const sub = overlay.querySelector('#dlSub');
+    const bar = overlay.querySelector('#dlBar');
+    const count = overlay.querySelector('#dlCount');
+    const okEl = overlay.querySelector('#dlOk');
+    const dl = overlay.querySelector('#dlDownload');
+    const cancel = overlay.querySelector('#dlCancel');
+    const zipBtn = overlay.querySelector('#dlZip');
+    const looseBtn = overlay.querySelector('#dlLoose');
+
+    const code = __dl_sanitizeName(__dl_getCode(it, href));
+    const uniq=[]; (urls||[]).forEach(u=>{ u=String(u||'').trim(); if(u && !uniq.includes(u)) uniq.push(u); });
+    const list = uniq.slice(0, 40);
+
+    overlay.classList.add('open');
+    let aborted=false;
+    const ac = new AbortController();
+
+    function close(){
+      aborted=true;
+      try{ ac.abort(); }catch(_e){}
+      try{ overlay.classList.remove('open'); }catch(_e){}
+      try{ if(overlay.__dl_blob_url){ URL.revokeObjectURL(overlay.__dl_blob_url); overlay.__dl_blob_url=null; } }catch(_e){}
+      try{ dl.classList.add('disabled'); dl.removeAttribute('href'); dl.style.display='none'; }catch(_e){}
+      try{ if(zipBtn) zipBtn.style.display=''; if(looseBtn) looseBtn.style.display=''; }catch(_e){}
+      try{ sub.textContent=''; bar.style.width='0%'; count.textContent='0/0'; okEl.textContent='0 ok'; cancel.textContent='Cancelar'; }catch(_e){}
+    }
+
+    overlay.onclick = function(ev){
+      if(ev && ev.target && (ev.target.hasAttribute('data-dl-close') || ev.target.id==='dlCancel')) close();
+    };
+    cancel.onclick = close;
+
+    // estado: modo soltas
+    try{ if(zipBtn) zipBtn.style.display='none'; if(looseBtn) looseBtn.style.display='none'; }catch(_e){}
+    try{ dl.style.display='none'; }catch(_e){}
+
+    sub.textContent = 'Baixando fotos (soltas)…';
+    count.textContent = `0/${list.length}`;
+    okEl.textContent = '0 ok';
+    bar.style.width = '0%';
+
+    let done=0, ok=0;
+
+    for(let i=0;i<list.length;i++){
+      if(aborted) break;
+      const u = list[i];
+      const ext = __dl_guessExt(u);
+      const name = `${code}_${String(i+1).padStart(2,'0')}${ext}`;
+      let success=false;
+
+      try{
+        const bytes = await __dl_fetchBytes(u, ac.signal);
+        success = __dl_triggerBlobDownload(bytes, name);
+      }catch(_e){
+        // fallback: tenta link direto
+        success = __dl_triggerDirect(u, name);
+      }
+
+      if(success) ok++;
+      done++;
+      const pct = list.length ? Math.round((done/list.length)*100) : 0;
+      bar.style.width = pct + '%';
+      count.textContent = `${done}/${list.length}`;
+      okEl.textContent = `${ok} ok`;
+
+      // pequeno espaçamento para o browser não bloquear tão facilmente
+      await new Promise(r=>setTimeout(r, 220));
+    }
+
+    if(aborted) return;
+
+    if(!ok){
+      sub.textContent = 'Não consegui baixar as fotos (bloqueio de CORS/404).';
+    }else{
+      sub.textContent = `Downloads iniciados (${ok} foto(s)).`;
+    }
+    cancel.textContent = 'Fechar';
+    cancel.onclick = close;
+  }
+function __dl_start(it, gal, href){
+    const overlay = __dl_ensureOverlay();
+    const sub = overlay.querySelector('#dlSub');
+    const bar = overlay.querySelector('#dlBar');
+    const count = overlay.querySelector('#dlCount');
+    const okEl = overlay.querySelector('#dlOk');
+    const dl = overlay.querySelector('#dlDownload');
+    const cancel = overlay.querySelector('#dlCancel');
+    const zipBtn = overlay.querySelector('#dlZip');
+    const looseBtn = overlay.querySelector('#dlLoose');
+
+    const uniq=[]; (gal||[]).forEach(u=>{ u=String(u||'').trim(); if(u && !uniq.includes(u)) uniq.push(u); });
+    const list = uniq.slice(0, 40);
+
+    function close(){
+      try{ overlay.classList.remove('open'); }catch(_e){}
+      try{ if(overlay.__dl_blob_url){ URL.revokeObjectURL(overlay.__dl_blob_url); overlay.__dl_blob_url=null; } }catch(_e){}
+      try{ dl.classList.add('disabled'); dl.removeAttribute('href'); dl.style.display='none'; }catch(_e){}
+      try{ if(zipBtn) zipBtn.style.display=''; if(looseBtn) looseBtn.style.display=''; }catch(_e){}
+      try{ sub.textContent=''; bar.style.width='0%'; count.textContent='0/0'; okEl.textContent='0 ok'; cancel.textContent='Cancelar'; }catch(_e){}
+    }
+
+    // modo escolha
+    overlay.classList.add('open');
+    try{ dl.style.display='none'; }catch(_e){}
+    try{ dl.classList.add('disabled'); dl.removeAttribute('href'); dl.style.display='none'; }catch(_e){}
+    try{ if(zipBtn) zipBtn.style.display=''; if(looseBtn) looseBtn.style.display=''; }catch(_e){}
+    cancel.textContent = 'Cancelar';
+    sub.textContent = 'Como você quer baixar as fotos?';
+    count.textContent = `0/${list.length}`;
+    okEl.textContent = '0 ok';
+    bar.style.width = '0%';
+
+    overlay.onclick = function(ev){
+      if(ev && ev.target && ev.target.hasAttribute('data-dl-close')) close();
+    };
+    cancel.onclick = close;
+
+    if(zipBtn) zipBtn.onclick = function(ev){
+      ev && ev.preventDefault && ev.preventDefault();
+      try{ zipBtn.style.display='none'; if(looseBtn) looseBtn.style.display='none'; }catch(_e){}
+      __dl_buildZip(it||{}, list, href||'');
+    };
+
+    if(looseBtn) looseBtn.onclick = function(ev){
+      ev && ev.preventDefault && ev.preventDefault();
+      const ok = window.confirm('Baixar fotos soltas pode disparar vários downloads. Se o navegador perguntar, permita múltiplos downloads. Continuar?');
+      if(!ok) return;
+      try{ looseBtn.style.display='none'; if(zipBtn) zipBtn.style.display='none'; }catch(_e){}
+      __dl_buildLoose(it||{}, list, href||'');
+    };
+  }
+
+// ===== Delegate click (beats older handlers) ===============================
+  try{var ov=document.getElementById('galleryOverlay'); if(ov&&(ov.classList.contains('open')||(event.target&&ov.contains(event.target)))){return;}}catch(_e){} document.addEventListener('click', function(e){
+    const btn = e.target.closest('.btn-img');
+    const img = e.target.closest('img.thumb, .thumb img, .photo img, .cover img');
+    if(!btn && !img) return;
+
+    const el = btn || img;
+    // Resolve item by row anchor url
+    let href=null, row=el.closest('tr');
+    if(row){ const a=row.querySelector('a[href]'); if(a && a.href) href=a.href; }
+
+    let it=null, gal=[];
+    try{
+      if(window.DATA && Array.isArray(DATA) && href){
+        it = DATA.find(x=> String(x.url||'')===String(href)) || null;
+        if(it){ gal = extractGallery(it); }
+      }
+    }catch(_e){}
+
+    if(!gal.length && img && img.src){ gal=[img.src].concat(deriveFromAlpha(img.src)); }
+
+    // Botão IMG => baixa ZIP
+    if(btn){
+      if(!gal.length) return;
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
+      __dl_start(it||{}, gal, href||'');
+      return;
+    }
+
+    // Clique na miniatura => abre galeria
+    if(img && gal.length){
+      e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation();
+      openGallery(gal);
+    }
+  }, true);
+})();
+</script>
+
+
+
+
+  <script type="application/x-unificador">
+(function(){
+  if (window.__BIND_AUTO_FILTERS__) return;
+  window.__BIND_AUTO_FILTERS__ = true;
+
+  function _apply(){
+    try{
+      // TOTAL = snapshot do último dia (não troca dataset ao digitar/buscar)
+      if(window.__MODE_TOTAL){
+        // garante que estamos no snapshot (só se algum script tiver alterado o DATA)
+        if(window.__DATA_MODE !== 'total' && typeof applySnapshotTotalAndRender === 'function'){
+          applySnapshotTotalAndRender();
+        }else if(typeof render === 'function'){
+          render();
+        }
+        return;
+      }
+      if(typeof applyIntervalAndRender === 'function' && typeof collectInterval === 'function'){
+        applyIntervalAndRender(collectInterval());
+      }else if(typeof render === 'function'){
+        render();
+      }
+    }catch(e){ /* noop */ }
+  }
+  function ymd(d){
+    var z=function(n){return String(n).padStart(2,'0')};
+    return d.getFullYear() + "-" + z(d.getMonth()+1) + "-" + z(d.getDate());
+  }
+  function lastEnd(){
+    var t = ymd(new Date());
+    if(window.dates && Array.isArray(window.dates) && dates.length){
+      return dates.indexOf(t)>=0 ? t : dates[dates.length-1];
+    }
+    return t;
+  }
+  function setDateRange(a,b){
+    var A=document.getElementById('dtIni');
+    var B=document.getElementById('dtFim');
+    if(A) A.value=a;
+    if(B) B.value=b;
+    _apply();
+  }
+
+  // Quick search (top or sidebar) — immediate
+  (function(){
+    var el = document.getElementById('searchTop') || document.getElementById('q');
+    if(!el) return;
+    if(el.dataset._wired) return;
+    el.addEventListener('input', function(){
+      try{
+        window.state = window.state || { filtro:{} };
+        state.filtro = state.filtro || {};
+        state.filtro.q = el.value || '';
+        state.page = 1;
+      }catch(e){}
+      _apply();
+    });
+    el.dataset._wired = "1";
+  })();
+
+  // Date inputs — react on change/input
+  (function(){
+    var a=document.getElementById('dtIni'), b=document.getElementById('dtFim');
+    function onDate(){ try{ state.page=1; }catch(e){} _apply(); }
+    if(a && !a.dataset._wired){ a.addEventListener('input', onDate); a.addEventListener('change', onDate); a.dataset._wired="1"; }
+    if(b && !b.dataset._wired){ b.addEventListener('input', onDate); b.addEventListener('change', onDate); b.dataset._wired="1"; }
+  })();
+
+  // Date presets — bind whatever IDs exist
+  (function(){
+    function bind(id, fn){
+      var el = document.getElementById(id);
+      if(!el || el.dataset._wired) return;
+      el.addEventListener('click', fn);
+      el.dataset._wired = "1";
+    }
+    // Hoje (D -> D)
+    bind('qHoje', function(){
+      var end = lastEnd();
+      setDateRange(end, end);
+    });
+    bind('btnHoje', function(){
+      var end = lastEnd();
+      setDateRange(end, end);
+    });
+    // 7 dias
+    bind('q7', function(){
+      var end = lastEnd();
+      if(window.dates && dates.length){
+        var idx = dates.indexOf(end);
+        var start = dates[Math.max(0, idx-6)];
+        setDateRange(start, end);
+      }else{
+        var e = new Date(); var endStr = ymd(e);
+        e.setDate(e.getDate()-6);
+        setDateRange(ymd(e), endStr);
+      }
+    });
+    bind('btn7', function(){
+      var end = lastEnd();
+      if(window.dates && dates.length){
+        var idx = dates.indexOf(end);
+        var start = dates[Math.max(0, idx-6)];
+        setDateRange(start, end);
+      }else{
+        var e = new Date(); var endStr = ymd(e);
+        e.setDate(e.getDate()-6);
+        setDateRange(ymd(e), endStr);
+      }
+    });
+    // Mês atual
+    function monthFn(){
+      var end = lastEnd();
+      if(window.dates && dates.length){
+        var e = new Date(end+"T00:00:00");
+        var m = String(e.getMonth()+1).padStart(2,'0');
+        var y = e.getFullYear();
+        var start = y+"-"+m+"-01";
+        if(dates.indexOf(start)<0){
+          var first = dates.find(function(d){ return d.startsWith(y+"-"+m+"-"); });
+          if(first) start = first;
+        }
+        setDateRange(start, end);
+      }else{
+        var e = new Date(); var endStr = ymd(e);
+        var s = new Date(e.getFullYear(), e.getMonth(), 1);
+        setDateRange(ymd(s), endStr);
+      }
+    }
+    bind('qMes', monthFn);
+    bind('qMesAtual', monthFn);
+    bind('btnMes', monthFn);
+    bind('btnMesAtual', monthFn);
+  })();
+})();
+</script>
+
+
+<!-- === PATCH: Auto-Refresh, Interval Wiring, Movement Toggle, Lightbox Fix === -->
+  <script type="application/x-unificador">
+(function(){
+  // Safe helpers
+  const $ = (id)=>document.getElementById(id);
+  const on = (el, ev, fn, opts)=> el && el.addEventListener(ev, fn, opts||false);
+  const z = (n)=> (n<10? "0"+n : ""+n);
+  const ymd = (d)=> `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+
+  // Ensure default state
+  window.state = window.state || { filtro:{ negociation:'todas' }, page:1, pageSize:25, results:[] };
+  state.filtro = Object.assign({ mov:'entrou', q:'', min:'', max:'', tipo:'', bairro:'', quartos:'', suites:'', bwc:'', vagas:'', minUtil:'', minTotal:'', minTerreno:'', negociacao:(state.filtro&&state.filtro.negociacao)||'todas' }, state.filtro);
+
+  // Interval aggregation from DAILY
+  function buildIntervalList(from, to){
+    try{
+      const acc = [];
+      if(typeof DAILY!=='object' || !DAILY) return acc;
+      const keys = Object.keys(DAILY).sort();
+      for(const k of keys){
+        if(k<from || k>to) continue;
+        const day = DAILY[k]||{};
+        const a = Array.isArray(day.entrou)? day.entrou : [];
+        const b = Array.isArray(day.saiu)? day.saiu : [];
+        for(const x of a) acc.push(x);
+        for(const x of b) acc.push(x);
+      }
+      return acc;
+    }catch(e){ console.error('buildIntervalList error', e); return []; }
+  }
+
+  // Apply interval into DATA and re-render
+  function applyInterval(from,to){
+    if(!from || !to){ return; }
+    const list = buildIntervalList(from,to);
+    if(typeof applyIntervalAndRender === 'function'){
+      applyIntervalAndRender(list);
+    }else{
+      // Fallback: mutate DATA and call render
+      if(Array.isArray(window.DATA)){
+        window.DATA.splice(0, window.DATA.length, ...list);
+      }
+      if(typeof window.render === 'function') window.render();
+    }
+  }
+
+  // Wire quick chips and date inputs
+  function wireDateControls(){
+    const A = $('dtIni'), B = $('dtFim');
+    const today = new Date(); const todayY = ymd(today);
+    if(A && !A.value) A.value = todayY;
+    if(B && !B.value) B.value = todayY;
+
+    if(!A || !B) return;
+
+    // Marca visualmente qual filtro rápido de data está ativo
+    function setActiveQuickFilter(btn){
+      const chips = document.querySelectorAll('.chip-date');
+      chips.forEach(el => {
+        el.classList.toggle('active', el === btn);
+      });
+    }
+
+    on(A, 'change', ()=>{ setActiveQuickFilter(); applyInterval(A.value, B.value); });
+    on(B, 'change', ()=>{ setActiveQuickFilter(); applyInterval(A.value, B.value); });
+
+    const btnHoje   = $('qHoje');
+    const btnSemana = $('qSemana');
+    const btn7      = $('q7');
+    const btn30     = $('q30');
+    const btnMes    = $('qMes');
+
+    if(btnHoje){
+      on(btnHoje,'click', ()=>{
+        const t = new Date();
+        const from = ymd(t);
+        const to = ymd(t);
+        A.value = from; B.value = to;
+        applyInterval(from,to);
+        setActiveQuickFilter(btnHoje);
+      });
+    }
+
+    if(btnSemana){
+      on(btnSemana,'click', ()=>{
+        const today = new Date();
+        // Normaliza para meia-noite local
+        today.setHours(0,0,0,0);
+        const dow = today.getDay(); // 0=Dom,1=Seg,...6=Sab
+        const start = new Date(today);
+        // Segunda-feira da semana atual
+        const diff = (dow === 0 ? -6 : 1 - dow);
+        start.setDate(today.getDate() + diff);
+        // Semana atual: de segunda até a data de hoje
+        const from = ymd(start);
+        const to = ymd(today);
+        A.value = from; B.value = to;
+        applyInterval(from,to);
+        setActiveQuickFilter(btnSemana);
+      });
+    }
+
+    if(btn7){
+      on(btn7,'click', ()=>{
+        const t = new Date();
+        const a = new Date(t); a.setDate(a.getDate()-6);
+        const from = ymd(a); const to = ymd(t);
+        A.value = from; B.value = to;
+        applyInterval(from,to);
+        setActiveQuickFilter(btn7);
+      });
+    }
+
+    if(btn30){
+      on(btn30,'click', ()=>{
+        // Últimos 30 dias com base na data atual (inclusive hoje)
+        const end = new Date();
+        end.setHours(0,0,0,0);
+        const start = new Date(end);
+        // 29 dias antes + hoje = 30 dias de intervalo
+        start.setDate(end.getDate() - 29);
+        const from = ymd(start);
+        const to = ymd(end);
+        A.value = from; B.value = to;
+        applyInterval(from,to);
+        setActiveQuickFilter(btn30);
+      });
+    }
+
+    if(btnMes){
+      on(btnMes,'click', ()=>{
+        const t = new Date();
+        const a = new Date(t.getFullYear(), t.getMonth(), 1);
+        const from = ymd(a); const to = ymd(t);
+        A.value = from; B.value = to;
+        applyInterval(from,to);
+        setActiveQuickFilter(btnMes);
+      });
+    }
+
+    // First apply once
+    applyInterval(A.value, B.value);
+  }
+
+
+
+  // Wire movement toggle (ENTROU / SAIU / TOTAL) — robust + compatível com modo TOTAL
+  function wireMovToggle(){
+    // Desabilitado: o clique em Movimento é tratado no "mov-toggle-final-fix-v1".
+    // (Evita conflito de listeners em capture que podem bloquear Entrou/Saiu/Total.)
+    return;
+    const wrap = $('movToggle');
+    if(!wrap) return;
+    if(wrap.__wired_mov2) return;
+    wrap.__wired_mov2 = true;
+
+    const btns = ()=> Array.prototype.slice.call(wrap.querySelectorAll('button[data-mov]'));
+    const setActive = (v)=>{
+      btns().forEach(b=>{
+        const mv = (b.getAttribute('data-mov')||'').toLowerCase();
+        b.classList.toggle('active', mv === v);
+      });
+    };
+
+    const setQuickHojeVisual = ()=>{
+      const ids = ['qHoje','qSemana','qMes','q7','q30'];
+      ids.forEach(id=>{
+        const el = $(id);
+        if(!el) return;
+        const isHoje = (id === 'qHoje');
+        el.classList.toggle('active', isHoje);
+        if(!isHoje) el.classList.add('ghost');
+        else el.classList.remove('ghost');
+      });
+    };
+
+    const lastEnd = ()=>{
+      try{
+        if(typeof dates !== 'undefined' && Array.isArray(dates) && dates.length) return dates[dates.length-1];
+      }catch(_){ }
+      try{
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+      }catch(_){ return ''; }
+    };
+
+    const applyIntervalNow = ()=>{
+      try{
+        if(typeof collectInterval === 'function' && typeof applyIntervalAndRender === 'function'){
+          applyIntervalAndRender(collectInterval());
+          return;
+        }
+      }catch(_){ }
+      if(typeof window.render === 'function') window.render();
+    };
+
+    const applyTotalNow = ()=>{
+      try{
+        if(typeof applySnapshotTotalAndRender === 'function'){
+          applySnapshotTotalAndRender();
+          return;
+        }
+      }catch(_){ }
+      try{
+        if(typeof SNAPSHOT_TOTAL !== 'undefined' && Array.isArray(SNAPSHOT_TOTAL)){
+          if(typeof applyIntervalAndRender === 'function'){ applyIntervalAndRender(SNAPSHOT_TOTAL); return; }
+        }
+      }catch(_){ }
+      try{
+        const st = window.__SNAPSHOT_TOTAL_JSON__;
+        if(Array.isArray(st) && typeof applyIntervalAndRender === 'function'){
+          applyIntervalAndRender(st);
+          return;
+        }
+      }catch(_){ }
+      if(typeof window.render === 'function') window.render();
+    };
+
+    // CAPTURE handler: evita conflitos com listeners antigos
+    wrap.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-mov]');
+      if(!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+
+      const v = (btn.getAttribute('data-mov')||'').toLowerCase();
+
+      if(v === 'total'){
+        window.__MODE_TOTAL = true;
+        try{ if(state && state.filtro) state.filtro.mov = ''; }catch(_){ }
+        try{ state.page = 1; }catch(_){ }
+        setActive('total');
+        setQuickHojeVisual();
+
+        const end = lastEnd();
+        const A = $('dtIni'), B = $('dtFim');
+        if(A && B && end){
+          A.value = end;
+          B.value = end;
+        }
+        applyTotalNow();
+        return;
+      }
+
+      window.__MODE_TOTAL = false;
+      const mv = (v === 'saiu') ? 'saiu' : 'entrou';
+      try{ if(state && state.filtro) state.filtro.mov = mv; }catch(_){ }
+      try{ state.page = 1; }catch(_){ }
+      setActive(mv);
+      applyIntervalNow();
+    }, true);
+
+    // default
+    try{
+      if(!state.filtro.mov || state.filtro.mov === 'total') state.filtro.mov = 'entrou';
+window.__MODE_TOTAL = false;
+try{ window.__DATA_MODE = 'interval'; }catch(e){}
+}catch(_){ }
+    setActive((state && state.filtro && state.filtro.mov) ? state.filtro.mov : 'entrou');
+  }
+
+
+  // Wire negotiation toggle already present; ensure it sets state correctly
+  (function patchNegToggle(){
+    const wrap = $('negociacaoToggle');
+    if(!wrap) return;
+    // If listener already exists, we leave it; otherwise add a simple one
+    wrap.__patched || (on(wrap,'click',(e)=>{
+      const btn = e.target.closest('button'); if(!btn) return;
+      wrap.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.filtro.negociacao = btn.getAttribute('data-neg') || 'todas';
+      state.page = 1;
+      if(typeof window.render === 'function') window.render();
+    }), wrap.__patched=true);
+  })();
+
+  // Wire sidebar inputs (auto-refresh)
+  function wireSidebarFilters(){
+    const map = {
+      q: 'searchTop',
+      min: 'min',
+      max: 'max',
+      tipo: 'tipo',
+            bairro: 'bairro',
+quartos: 'qtdQuartos',
+      suites: 'qtdSuites',
+      bwc: 'qtdBwc',
+      vagas: 'qtdVagas',
+      minUtil: 'minUtil',
+      minTotal: 'minTotal',
+      minTerreno: 'minTerreno'
+    };
+    for(const [key,id] of Object.entries(map)){
+      const el = $(id);
+      if(!el) continue;
+      const ev = (el.tagName==='SELECT'||el.type==='number'||el.type==='date')? 'change':'input';
+      on(el, ev, (e)=>{
+        state.filtro[key] = e.target.value;
+        state.page = 1;
+        if(typeof window.render === 'function') window.render();
+      });
+    }
+  }
+
+  // Wire page size change (idempotent)
+  (function wirePageSize(){
+    const el = $('pageSize');
+    if(!el) return;
+    on(el, 'change', (e)=>{
+      state.pageSize = Number(e.target.value)||25;
+      state.page = 1;
+      if(typeof window.render === 'function') window.render();
+    });
+  })();
+
+  // Lightbox for image thumbnails
+  function wireLightbox(){
+    const box = $('lightbox');
+    const img = $('lightbox-img');
+    const tbody = $('tbody');
+    if(!box || !img || !tbody) return;
+    on(tbody, 'click', (e)=>{
+      const imgel = e.target.closest('img.thumb');
+      if(!imgel) return;
+      e.preventDefault();
+      const src = imgel.getAttribute('src') || imgel.getAttribute('data-src-from') || '';
+      if(!src) return;
+      img.src = src;
+      box.classList.add('open');
+    });
+    on(box, 'click', ()=>{
+      box.classList.remove('open');
+      img.removeAttribute('src');
+    });
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded', ()=>{
+    try{
+      wireDateControls();
+      wireMovToggle();
+      wireSidebarFilters();
+      wireLightbox();
+      // Ensure first render
+      if(typeof window.render === 'function') window.render();
+    }catch(e){ console.error('Init wiring error', e); }
+  });
+})();
+</script>
+
+
+
+
+
+  <script type="application/x-unificador">
+(function(){
+  try{
+    window.state = window.state || {};
+    state.sortKey = state.sortKey || 'tipo_end';
+    state.sortDir = state.sortDir || 'asc';
+    const _coll = new Intl.Collator('pt-BR', {numeric:true, sensitivity:'base'});
+    function cmpStr(a,b){ a=(a==null?'':String(a)); b=(b==null?'':String(b)); return _coll.compare(a,b); }
+    function cmpNum(a,b){
+      const anum = (a==null||a==='') ? NaN : Number(String(a).replace(/[^\d.-]/g,''));
+      const bnum = (b==null||b==='') ? NaN : Number(String(b).replace(/[^\d.-]/g,''));
+      const aNa = Number.isNaN(anum), bNa = Number.isNaN(bnum);
+      if(aNa && bNa) return 0; if(aNa) return 1; if(bNa) return -1; return anum - bnum;
+    }
+    window.keyFor = window.keyFor || function(it,k){
+      switch(k){
+        case 'tipo_end': return [(it.tipo||''), (it.endereco||'')];
+        case 'util': return it.area_util;
+        case 'total': return it.area_total;
+        case 'terreno': return it.area_terreno;
+        case 'preco': return it.preco;
+        case 'anunciante': return it.anunciante || '';
+        default: return null;
+      }
+    };
+    window.applySort = window.applySort || function(list){
+      const k = state.sortKey; if(!k) return list;
+      const dir = state.sortDir==='desc' ? -1 : 1;
+      return [...list].sort((a,b)=>{
+        const ka = keyFor(a,k), kb = keyFor(b,k);
+        if(Array.isArray(ka) && Array.isArray(kb)){
+          const c = cmpStr(ka[0], kb[0]); if(c!==0) return c*dir;
+          return cmpStr(ka[1], kb[1]) * dir;
+        }
+        if(typeof ka === 'number' || typeof kb === 'number'){
+          return cmpNum(ka, kb) * dir;
+        }
+        return cmpStr(ka, kb) * dir;
+      });
+    };
+    window.updateSortIndicators = window.updateSortIndicators || function(){
+      document.querySelectorAll('.sort-btn').forEach(btn=>{
+        const active = (btn.dataset.key===state.sortKey);
+        btn.classList.toggle('active', active);
+        const arrow = btn.querySelector('.arrow'); if(arrow){ arrow.textContent = active ? (state.sortDir==='asc'?'▲':'▼') : '↕'; }
+      });
+    };
+    function ensureSortButtons(){
+      const map = [
+        { rx:/tipo/i, key:'tipo_end' },
+        { rx:/útil/i, key:'util' },
+        { rx:/total/i, key:'total' },
+        { rx:/terreno/i, key:'terreno' },
+        { rx:/preço|preco/i, key:'preco' },
+        { rx:/anunciante/i, key:'anunciante' },
+      ];
+      document.querySelectorAll('thead th').forEach(th=>{
+        const raw = th.textContent.trim();
+        const m = map.find(x=>x.rx.test(raw));
+        if(m && !th.querySelector('.sort-btn')){
+          const btn = document.createElement('button');
+          btn.className='sort-btn'; btn.type='button'; btn.dataset.key=m.key;
+          btn.innerHTML = '<span class="label">'+raw+'</span> <span class="arrow">↕</span>';
+          th.textContent=''; th.appendChild(btn);
+          btn.addEventListener('click', ()=>{
+            const k = btn.dataset.key;
+            if(state.sortKey===k){ state.sortDir = (state.sortDir==='asc'?'desc':'asc'); }
+            else{ state.sortKey = k; state.sortDir = 'asc'; }
+            if(typeof window.render==='function') window.render();
+            if(typeof window.updateSortIndicators==='function') updateSortIndicators();
+          });
+        }
+      });
+      if(typeof window.updateSortIndicators==='function') updateSortIndicators();
+    }
+    const css = '.sort-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer}.sort-btn .arrow{font-size:12px;opacity:.75}';
+    const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    if(document.readyState!=='loading') ensureSortButtons();
+    else document.addEventListener('DOMContentLoaded', ensureSortButtons);
+  }catch(e){ console.warn('sort init failed', e); }
+})();
+</script>
+
+
+  <script type="application/x-unificador" data-src="./assets/qr-share-min.js" data-defer="1"></script>
+
+  <script type="application/x-unificador" data-src="./assets/wa_strict_override_v9.js" data-defer="1"></script>
+  <script type="application/x-unificador" data-src="assets/img-btn-enhancer.js"></script>
+  <script type="application/x-unificador" data-src="assets/qr-iconize.js"></script>
+  <script type="application/x-unificador" data-src="assets/detail-modal.js"></script>
+
+  <script type="application/x-unificador">
+(function(){
+  function parseDateBR(s){
+    if(!s) return null;
+    // Accept formats like 2025-10-13, 13/10/2025, 13-10-2025
+    s = String(s).trim();
+    let d=null;
+    // ISO first
+    if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+      d = new Date(s + "T00:00:00");
+    }else{
+      const m = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
+      if(m){
+        const dd=m[1].padStart(2,'0'), mm=m[2].padStart(2,'0');
+        let yyyy=m[3];
+        if(yyyy.length===2){ yyyy = (yyyy>'50'?'19':'20') + yyyy; }
+        d = new Date(yyyy+"-"+mm+"-"+dd+"T00:00:00");
+      }
+    }
+    if(isNaN(d?.getTime())) return null;
+    return d;
+  }
+  function fmtDateBR(d){
+    if(!(d instanceof Date) || isNaN(d.getTime())) return "";
+    const dd=String(d.getDate()).padStart(2,'0');
+    const mm=String(d.getMonth()+1).padStart(2,'0');
+    const yyyy=String(d.getFullYear());
+    return dd+"/"+mm+"/"+yyyy;
+  }
+  function daysSince(d){
+    if(!d) return "";
+    const now = new Date();
+    const ms = now - d;
+    if(!isFinite(ms)) return "";
+    return Math.floor(ms / (1000*60*60*24));
+  }
+  function attachTooltips(scope){
+    scope = scope || document;
+    scope.querySelectorAll('tr').forEach(function(tr){
+      const meta = tr.querySelector('.mov-meta');
+      if(!meta) return;
+      const mov = (meta.getAttribute('data-mov')||'').toLowerCase();
+      const de = parseDateBR(meta.getAttribute('data-data-entrada'));
+      const ds = parseDateBR(meta.getAttribute('data-data-saida'));
+      let ref = null, label = null;
+      if(mov.includes('entrou') || mov==='entrou'){
+        ref = de || ds; label = 'Entrou';
+      }else if(mov.includes('saiu') || mov==='saiu'){
+        ref = ds || de; label = 'Saiu';
+      }else{
+        // fallback: prefer entrada
+        ref = de || ds; label = ref===de ? 'Entrou' : (ref ? 'Saiu' : null);
+      }
+      if(!ref) return;
+      const dias = daysSince(ref);
+      const txt = label + ': ' + fmtDateBR(ref) + ' • ' + dias + ' dia' + (dias===1?'':'s');
+      // Find badge with the text Entrou/Saiu
+      let badge = Array.from(tr.querySelectorAll('.badge, .chip, .tag')).find(function(el){
+        const t=(el.textContent||'').trim().toLowerCase();
+        return t.includes('entrou') || t.includes('saiu');
+      });
+      if(badge){
+        badge.setAttribute('data-tip', txt);
+        badge.setAttribute('title', txt); // native fallback
+      }
+    });
+  }
+  // Run now and on changes
+  function boot(){
+    attachTooltips(document);
+    if(window.MutationObserver && !window.__movTipObs){
+      window.__movTipObs = new MutationObserver(function(){
+        clearTimeout(window.__movTipDebounce);
+        window.__movTipDebounce = setTimeout(function(){ attachTooltips(document); }, 120);
+      });
+      window.__movTipObs.observe(document.body||document.documentElement, {childList:true, subtree:true});
+    }
+    window.addEventListener('hashchange', function(){ setTimeout(function(){ attachTooltips(document); }, 100); }, {passive:true});
+    window.addEventListener('popstate', function(){ setTimeout(function(){ attachTooltips(document); }, 100); }, {passive:true});
+  }
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+  window.addEventListener('load', function(){ attachTooltips(document); });
+})();
+</script>
+
+
+  <script type="application/x-unificador" data-id="enforce-defaults-v2">
+(function(){
+  // Defaults de abertura:
+  // ✅ Hoje (D -> D, baseado no último dia disponível na base)
+  // ✅ Movimento: Entrou
+  // ✅ Negociação: Venda
+  //
+  // IMPORTANTE: estes scripts são injetados APÓS o DOMContentLoaded pelo bootloader,
+  // então precisamos executar imediatamente (não depender de DOMContentLoaded).
+
+  function $(id){ return document.getElementById(id); }
+
+  function forEachNodeList(nl, fn){
+    if(!nl) return;
+    if(nl.forEach) return nl.forEach(fn);
+    Array.prototype.forEach.call(nl, fn);
+  }
+
+  function setQuickHojeVisual(){
+    try{
+      if(typeof window.setQuickFilterActive === 'function'){
+        window.setQuickFilterActive('qHoje');
+        return;
+      }
+    }catch(e){}
+    var ids = ['qHoje','qSemana','qMes','q7','q30'];
+    ids.forEach(function(id){
+      var el = $(id);
+      if(!el) return;
+      var isHoje = (id === 'qHoje');
+      el.classList.toggle('active', isHoje);
+      if(!isHoje) el.classList.add('ghost');
+      else el.classList.remove('ghost');
+    });
+  }
+
+  function hardSetNegVenda(){
+    try{
+      if(window.state && window.state.filtro) window.state.filtro.negociacao = 'venda';
+    }catch(e){}
+    var wrap = $('negociacaoToggle');
+    if(!wrap) return;
+    forEachNodeList(wrap.querySelectorAll('button'), function(b){ b.classList.remove('active'); });
+    var venda = wrap.querySelector('button[data-neg="venda"]');
+    if(venda) venda.classList.add('active');
+  }
+
+  function hardSetMovEntrou(){
+    try{ window.__MODE_TOTAL = false; }catch(e){}
+    try{
+      if(window.state && window.state.filtro) window.state.filtro.mov = 'entrou';
+      if(window.state) window.state.page = 1;
+    }catch(e){}
+    var wrap = $('movToggle');
+    if(!wrap) return;
+    forEachNodeList(wrap.querySelectorAll('button[data-mov]'), function(b){
+      var mv = (b.getAttribute('data-mov')||'').toLowerCase();
+      b.classList.toggle('active', mv === 'entrou');
+    });
+  }
+
+  function computeHojeRangeFallback(){
+    // Retorna {start,end} como strings YYYY-MM-DD (HOJE = apenas o último dia disponível)
+    var end = '';
+    try{ if(typeof window.BASE_TODAY !== 'undefined' && window.BASE_TODAY) end = String(window.BASE_TODAY); }catch(e){}
+    try{ if(!end && Array.isArray(window.dates) && window.dates.length) end = String(window.dates[window.dates.length-1]); }catch(e){}
+    try{
+      if(!end && typeof window.DAILY === 'object' && window.DAILY){
+        var ks = Object.keys(window.DAILY).sort();
+        if(ks.length) end = String(ks[ks.length-1]);
+      }
+    }catch(e){}
+    var start = end;
+    return {start:start, end:end};
+  }
+
+  function applyHojeInterval(){
+    try{ window.__MODE_TOTAL = false; }catch(e){}
+    // Preferir o handler oficial do botão Hoje (pois ele chama applyIntervalAndRender corretamente)
+    var qHoje = $('qHoje');
+    if(qHoje){
+      try{
+        if(typeof qHoje.onclick === 'function'){ qHoje.onclick(); return true; }
+      }catch(e){}
+      try{ qHoje.click(); return true; }catch(e){}
+    }
+    // Fallback: setar datas e aplicar
+    var A = $('dtIni'), B = $('dtFim');
+    var r = computeHojeRangeFallback();
+    if(A && r.start) A.value = r.start;
+    if(B && r.end)   B.value = r.end;
+
+    setQuickHojeVisual();
+
+    try{
+      if(typeof window.applyIntervalAndRender === 'function' && typeof window.collectInterval === 'function'){
+        window.applyIntervalAndRender(window.collectInterval());
+        return true;
+      }
+    }catch(e){}
+    try{ if(typeof window.render === 'function') window.render(); }catch(e){}
+    return true;
+  }
+
+  function enforceAll(){
+    // Ordem importa:
+    // 1) garantir modo intervalo (não TOTAL)
+    try{ window.__MODE_TOTAL = false; }catch(e){}
+    // 2) estado e visuais
+    hardSetMovEntrou();
+    hardSetNegVenda();
+    // 3) aplicar Hoje (D -> D) e renderizar resultados
+    applyHojeInterval();
+    // 4) garantir visual do chip Hoje
+    setQuickHojeVisual();
+  }
+
+  // Executa imediatamente (bootloader injeta após DOMContentLoaded)
+  try{ enforceAll(); }catch(e){}
+  setTimeout(function(){ try{ enforceAll(); }catch(e){} }, 0);
+  setTimeout(function(){ try{ enforceAll(); }catch(e){} }, 80);
+  setTimeout(function(){ try{ enforceAll(); }catch(e){} }, 220);
+  if(typeof requestAnimationFrame === 'function'){
+    requestAnimationFrame(function(){ try{ enforceAll(); }catch(e){} });
+  }
+  window.addEventListener('load', function(){ try{ enforceAll(); }catch(e){} });
+})();
+
+
+  <script type="application/x-unificador">
+(function(){
+  function initFullscreenToggle(){
+    var btn = document.getElementById('fullscreenToggleBtn');
+    if(!btn) return;
+    var ico = btn.querySelector('.icon');
+
+    function updateState(){
+      var active = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      btn.classList.toggle('active', active);
+      if(ico) ico.textContent = active ? '⤡' : '⤢';
+    }
+
+    btn.addEventListener('click', function(){
+      try{
+        var doc = document;
+        var el = doc.documentElement;
+        var isFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+        if(!isFs){
+          if(el.requestFullscreen){ el.requestFullscreen(); }
+          else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); }
+          else if(el.mozRequestFullScreen){ el.mozRequestFullScreen(); }
+          else if(el.msRequestFullscreen){ el.msRequestFullscreen(); }
+        }else{
+          if(doc.exitFullscreen){ doc.exitFullscreen(); }
+          else if(doc.webkitExitFullscreen){ doc.webkitExitFullscreen(); }
+          else if(doc.mozCancelFullScreen){ doc.mozCancelFullScreen(); }
+          else if(doc.msExitFullscreen){ doc.msExitFullscreen(); }
+        }
+      }catch(e){}
+    });
+
+    document.addEventListener('fullscreenchange', updateState);
+    document.addEventListener('webkitfullscreenchange', updateState);
+    document.addEventListener('mozfullscreenchange', updateState);
+    document.addEventListener('MSFullscreenChange', updateState);
+    updateState();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initFullscreenToggle);
+  }else{
+    initFullscreenToggle();
+  }
+})();
+</script>
+
+  <script type="application/x-unificador" data-src="unificador.sort.js" data-defer="1"></script>
+
+
+  <script type="application/x-unificador" data-src="assets/emoji-fallback.js" data-defer="1"></script>
+  <script type="application/x-unificador" data-src="assets/theme-toggle.js" data-defer="1"></script>
+
+  <!-- FINAL FIX: garante clique no filtro Movimento (Entrou/Saiu/Total), mesmo com barras sticky/overlaps -->
+  <script type="application/x-unificador" data-id="mov-toggle-final-fix-v1">
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function getState(){
+    try{ if(typeof state !== 'undefined') return state; }catch(e){}
+    window.__fallback_state = window.__fallback_state || {filtro:{}, page:1, pageSize:25, results:[]};
+    return window.__fallback_state;
+  }
+  function btns(wrap){ return Array.prototype.slice.call(wrap.querySelectorAll('button[data-mov]')); }
+  function setActive(wrap, sel){
+    btns(wrap).forEach(function(b){
+      var mv = (b.getAttribute('data-mov')||'').toLowerCase();
+      b.classList.toggle('active', mv === sel);
+    });
+  }
+  function lockQuickFiltersToHoje(){
+    try{
+      if(Array.isArray(window.dates) && window.dates.length){
+        var last = window.dates[window.dates.length-1];
+        var A = $('dtIni'), B = $('dtFim');
+        if(A) A.value = last;
+        if(B) B.value = last;
+      }
+    }catch(e){}
+    try{
+      if(typeof window.setQuickFilterActive === 'function') window.setQuickFilterActive('qHoje');
+    }catch(e){}
+    ['qSemana','q7','q30','qMes','verTudo'].forEach(function(id){ var el=$(id); if(el) el.disabled = true; });
+    var hoje = $('qHoje'); if(hoje) hoje.disabled = false;
+  }
+  function unlockQuickFilters(){
+    ['qHoje','qSemana','q7','q30','qMes','verTudo'].forEach(function(id){ var el=$(id); if(el) el.disabled = false; });
+  }
+  function applyInterval(){
+    try{
+      if(typeof window.applyIntervalAndRender === 'function' && typeof window.collectInterval === 'function'){
+        window.applyIntervalAndRender(window.collectInterval());
+        return;
+      }
+    }catch(e){}
+    try{ if(typeof window.render === 'function') window.render(); }catch(e){}
+  }
+  function applyTotal(){
+    try{
+      if(typeof window.applySnapshotTotalAndRender === 'function'){
+        window.applySnapshotTotalAndRender();
+        return;
+      }
+    }catch(e){}
+    try{
+      if(typeof SNAPSHOT_TOTAL !== 'undefined' && Array.isArray(SNAPSHOT_TOTAL)){
+        if(typeof DATA !== 'undefined'){
+          DATA = SNAPSHOT_TOTAL.slice();
+          window.DATA = DATA;
+        try{ window.__DATA_MODE = 'total'; }catch(e){}
+        }else{
+          window.DATA = SNAPSHOT_TOTAL.slice();
+        }
+      }
+    }catch(e){}
+    try{ if(typeof window.render === 'function') window.render(); }catch(e){}
+  }
+
+  function wire(){
+    var wrap = $('movToggle');
+    if(!wrap || wrap.__mov_final_fix) return;
+    wrap.__mov_final_fix = true;
+
+    // Sync visual inicial
+    try{
+      var st = getState();
+      var cur = (window.__MODE_TOTAL ? 'total' : (st && st.filtro && st.filtro.mov ? String(st.filtro.mov).toLowerCase() : ''));
+      if(!cur){
+        var ab = wrap.querySelector('button[data-mov].active') || wrap.querySelector('button[data-mov="entrou"]');
+        cur = (ab && (ab.getAttribute('data-mov')||'').toLowerCase()) || 'entrou';
+      }
+      setActive(wrap, (cur==='saiu' ? 'saiu' : (cur==='total' ? 'total' : 'entrou')));
+    }catch(e){}
+
+    // Capture para vencer handlers anteriores e eventuais overlays
+    wrap.addEventListener('click', function(ev){
+      var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-mov]') : null;
+      if(!btn) return;
+      ev.stopImmediatePropagation();
+      ev.stopPropagation();
+
+      var sel = (btn.getAttribute('data-mov')||'entrou').toLowerCase();
+      var st = getState();
+      st.filtro = st.filtro || {};
+
+      if(sel === 'total'){
+        if(window.__MODE_TOTAL) return;
+        window.__MODE_TOTAL = true;
+        st.filtro.mov = '';
+        setActive(wrap, 'total');
+        lockQuickFiltersToHoje();
+        applyTotal();
+        return;
+      }
+
+      // entrou / saiu
+      if(window.__MODE_TOTAL){
+        window.__MODE_TOTAL = false;
+        unlockQuickFilters();
+      }
+      st.filtro.mov = sel;
+      st.page = 1;
+      setActive(wrap, sel);
+      applyInterval();
+    }, true);
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+  window.addEventListener('load', function(){ try{ wire(); }catch(e){} });
+})();
+  </script>
+</body>
+</html>
